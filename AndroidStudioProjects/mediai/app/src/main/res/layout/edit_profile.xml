@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <!-- Top Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/back_side_arrow"
+                android:contentDescription="Back" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit Profile"
+                android:textStyle="bold"
+                android:textColor="#111111"
+                android:textSize="18sp"
+                android:layout_marginStart="12dp" />
+        </LinearLayout>
+
+        <!-- Profile Image -->
+        <FrameLayout
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="24dp">
+
+            <ImageView
+                android:id="@+id/profileImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/profile_photo"
+                android:scaleType="centerCrop"
+                android:background="@color/white"
+                android:clipToOutline="true" />
+
+            <ImageView
+                android:id="@+id/cameraIcon"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/cam_logo"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="4dp"
+                android:padding="6dp"
+                android:backgroundTint="#2563EB" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change Photo"
+            android:textColor="#2563EB"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp" />
+        <!-- Name Field -->
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Name"
+            android:text="Sarah Wilson"
+            android:layout_marginTop="24dp"
+            android:background="@color/white"
+            android:padding="12dp" />
+
+        <!-- Username -->
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Username"
+            android:text="sarahwilson"
+            android:layout_marginTop="16dp"
+            android:background="@color/white"
+            android:padding="12dp" />
+
+        <!-- Email -->
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            android:text="sarah.wilson@example.com"
+            android:inputType="textEmailAddress"
+            android:layout_marginTop="16dp"
+            android:background="@color/white"
+            android:padding="12dp" />
+
+        <!-- Bio -->
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Bio"
+            android:text="Product designer based in San Francisco. Love creating beautiful and functional interfaces."
+            android:layout_marginTop="16dp"
+            android:minLines="3"
+            android:gravity="top"
+            android:background="@color/white"
+            android:padding="12dp" />
+
+        <!-- Location -->
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Location"
+            android:text="San Francisco, CA"
+            android:layout_marginTop="16dp"
+            android:background="@color/white"
+            android:padding="12dp" />
+
+        <!-- Save Button -->
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Save Changes"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="32dp" />
+
+    </LinearLayout>
+</ScrollView>

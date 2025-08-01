@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".deleteaccount"
+    android:id="@+id/delete"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="24dp"
+        android:layout_marginTop="8dp">
+
+        <ImageView
+            android:id="@+id/iv_back"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/back_side_arrow"
+            android:contentDescription="Back"
+            app:tint="#000000" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Delete Account"
+            android:textColor="#111111"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif"/>
+        <!-- Empty view for spacing -->
+        <View
+            android:layout_width="24dp"
+            android:layout_height="24dp"/>
+    </LinearLayout>
+
+    <!-- Warning Box -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:background="#FFF0F0"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#FFF0F0"
+        android:clipToPadding="false">
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/danger_logo"
+            android:contentDescription="Warning"
+            android:layout_marginEnd="8dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="This will delete all your data permanently"
+            android:textColor="#D32F2F"
+            android:textSize="15sp"
+            android:fontFamily="sans-serif"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <!-- Deletion Info Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#F7F7FA"
+        android:padding="20dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#F7F7FA"
+        >
+
+        <!-- Bullet 1 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:padding="8dp">
+
+            <!-- Icon section -->
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/dotimage"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="Icon"/>
+
+            <!-- Text section -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="All your medical records will be erased"
+                android:textColor="#222222"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif"/>
+        </LinearLayout>
+
+        <!-- Bullet 2 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:padding="8dp">
+
+            <!-- Icon section -->
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="19dp"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="Icon"
+                android:src="@drawable/dotimage" />
+
+            <!-- Text section -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Your treatment progress will be lost"
+                android:textColor="#222222"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif"/>
+        </LinearLayout>
+        <!-- Bullet 3 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:padding="8dp">
+
+            <!-- Icon section -->
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/dotimage"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="Icon"/>
+
+            <!-- Text section -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Your support group connections will be removed"
+                android:textColor="#222222"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif"/>
+        </LinearLayout>
+
+        <!-- Bullet 4 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:padding="8dp">
+
+            <!-- Icon section -->
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/dotimage"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="Icon"/>
+
+            <!-- Text section -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Recovery tracking data will be deleted"
+                android:textColor="#222222"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Feedback Label -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:text="Please tell us why you're leaving (optional):"
+        android:textColor="#222222"
+        android:textSize="15sp"
+        android:fontFamily="sans-serif"
+        android:layout_marginBottom="12dp"
+        android:layout_marginTop="8dp"/>
+
+    <!-- Feedback Field -->
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@drawable/uploadpagecircle"
+        android:hint="Your feedback helps us improve our services..."
+        android:textColor="#222222"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:textColorHint="#B0B0B0"
+        android:fontFamily="sans-serif"
+        android:padding="16dp"
+        android:gravity="top|start"
+        android:layout_marginBottom="24dp"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:text="Enter your Password"
+        android:textColor="#222222"
+        android:textSize="15sp"
+        android:fontFamily="sans-serif"
+        android:layout_marginBottom="12dp"
+        android:layout_marginTop="8dp"/>
+
+    <!-- Feedback Field -->
+    <EditText
+        android:id="@+id/passwordInput"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@drawable/uploadpagecircle"
+        android:hint="please enter your password to confirm"
+        android:textColor="#222222"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:textColorHint="#B0B0B0"
+        android:fontFamily="sans-serif"
+        android:padding="16dp"
+        android:gravity="top|start"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- Warning Text -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="This action cannot be undone"
+        android:textColor="#D32F2F"
+        android:textSize="14sp"
+        android:fontFamily="sans-serif"
+        android:gravity="center"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- Delete Account Button -->
+    <!-- Delete Account Button -->
+    <Button
+        android:id="@+id/btn_delete_account"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Delete Account"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="8dp"
+        android:textColor="#FFFFFF"
+        android:background="#D32F2F"/>
+
+    <!-- Cancel Button with red border -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_cancel"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Cancel"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="24dp"
+        android:textColor="#D32F2F"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif"
+        app:strokeColor="#D32F2F"
+        app:strokeWidth="2dp"
+        app:cornerRadius="12dp"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="@android:color/transparent"/>
+</LinearLayout>

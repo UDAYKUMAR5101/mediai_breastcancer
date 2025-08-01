@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">mediai</string>
+    <string name="profile_visibility">Profile Visibility</string>
+    <string name="back"><![CDATA[< Back]]></string>
+    <string name="privacy_settings">Privacy Settings</string>
+    <string name="read_our_privacy_policy">Read our Privacy Policy</string>
+    <string name="save">Save</string>
+    <string name="account_privacy">Account Privacy</string>
+    <string name="your_intelligent_healthcare_assistant">Your Intelligent Healthcare Assistant</string>
+    <string name="get_started">Get Started</string>
+</resources>

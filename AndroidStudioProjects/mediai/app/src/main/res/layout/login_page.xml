@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- App Logo -->
+        <ImageView
+            android:id="@+id/appLogo"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/login_image"
+            android:layout_marginTop="40dp"
+            android:contentDescription="App Logo"
+            android:scaleType="fitCenter" />
+
+        <!-- Welcome Text -->
+        <TextView
+            android:id="@+id/welcomeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Welcome, please sign in"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#2D2D2D"
+            android:layout_marginTop="24dp" />
+
+        <!-- Email Label -->
+        <TextView
+            android:id="@+id/emailLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Email"
+            android:textColor="#444444"
+            android:textSize="14sp"
+            android:layout_marginTop="24dp" />
+
+        <!-- Email Input -->
+        <EditText
+            android:id="@+id/emailInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter your email"
+            android:inputType="textEmailAddress"
+            android:background="@color/white"
+            android:padding="16dp"
+            android:textColorHint="#888888" />
+
+        <!-- Password Label -->
+        <TextView
+            android:id="@+id/passwordLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Password"
+            android:textColor="#444444"
+            android:textSize="14sp"
+            android:layout_marginTop="16dp" />
+
+        <!-- Password Input -->
+        <EditText
+            android:id="@+id/passwordInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter your password"
+            android:inputType="textPassword"
+            android:background="@color/white"
+            android:padding="16dp"
+            android:textColorHint="#888888" />
+
+        <!-- Forgot Password Link -->
+        <TextView
+            android:id="@+id/forgotPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Forgot Password?"
+            android:textColor="#5B67F3"
+            android:textSize="14sp"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp" />
+
+        <!-- Login Button -->
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginBottom="15dp"
+            android:text="Login"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#2563EB"
+            android:textColor="#FFFFFF" />
+
+        <!-- Sign Up Prompt -->
+        <TextView
+            android:id="@+id/signUpPrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Don't have an account? Sign up"
+            android:textColor="#333333"
+            android:textSize="14sp"
+            android:layout_marginTop="16dp" />
+
+
+    </LinearLayout>
+</ScrollView>

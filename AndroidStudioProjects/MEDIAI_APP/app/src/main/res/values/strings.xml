@@ -1,0 +1,100 @@
+<resources>
+    <string name="app_name">MEDIAI_APP</string>
+    <string name="your_intelligent_healthcare_assistant" />
+    <string name="get_started" />
+    <string name="save">save</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Settings Screen Strings -->
+    <string name="settings_title">Settings</string>
+    <string name="account_settings">ACCOUNT SETTINGS</string>
+    <string name="app_preferences">APP PREFERENCES</string>
+    <string name="profile_settings">Profile Settings</string>
+    <string name="profile_settings_subtitle">Update your personal details</string>
+    <string name="change_password">Change Password</string>
+    <string name="change_password_subtitle">Reset or change your password</string>
+    <string name="notifications">Notifications</string>
+    <string name="notifications_subtitle">Manage health alerts and reminders</string>
+    <string name="about_app">About App</string>
+    <string name="about_app_subtitle">Version, developer info</string>
+    <string name="privacy_security">Privacy &amp; Security</string>
+    <string name="privacy_security_subtitle">Data usage, permissions, terms</string>
+    <string name="logout">LogOut</string>
+    <string name="delete_account">Delete Account</string>
+
+    <!-- Edit Profile Screen Strings -->
+    <string name="edit_profile_title">Edit Profile</string>
+    <string name="change_photo">Change Photo</string>
+    <string name="full_name">Full Name</string>
+    <string name="full_name_placeholder">Enter your full name</string>
+    <string name="age">Age</string>
+    <string name="age_placeholder">Enter your age</string>
+    <string name="gender">Gender</string>
+    <string name="gender_value">Female</string>
+    <string name="date_of_birth">Date of Birth</string>
+    <string name="date_of_birth_placeholder">MM/DD/YYYY</string>
+    <string name="medical_notes">Medical Notes</string>
+    <string name="medical_notes_placeholder">Enter your medical notes</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="saving">Saving...</string>
+    <string name="profile_updated_success">Profile updated successfully</string>
+    <string name="profile_update_failed">Failed to update profile. Please try again.</string>
+    <string name="profile_created_success">Profile created successfully</string>
+    <string name="profile_create_failed">Failed to create profile. Please try again.</string>
+    <string name="network_error">Network error: %1$s</string>
+    <string name="enter_full_name">Please enter your full name</string>
+    <string name="enter_age">Please enter your age</string>
+    <string name="enter_valid_age">Please enter a valid age between 18 and 100</string>
+    <string name="select_date_of_birth">Please select your date of birth</string>
+    <string name="loading">Loading...</string>
+    <string name="failed_to_load_profile">Failed to load profile data</string>
+
+    <!-- Change Password Screen Strings -->
+    <string name="change_password_title">Change Password</string>
+    <string name="current_password">Current Password</string>
+    <string name="current_password_placeholder">Enter current password</string>
+    <string name="new_password">New Password</string>
+    <string name="new_password_placeholder">Enter new password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
+    <string name="confirm_new_password_placeholder">Confirm new password</string>
+    <string name="password_strength_weak">Password strength: Weak</string>
+    <string name="password_strength_medium">Password strength: Medium</string>
+    <string name="password_strength_strong">Password strength: Strong</string>
+    <string name="password_requirements">Password Requirements</string>
+    <string name="requirement_8_characters">At least 8 characters</string>
+    <string name="requirement_uppercase">One uppercase letter</string>
+    <string name="requirement_number">One number</string>
+    <string name="requirement_special">One special character</string>
+
+    <!-- Notification Preferences Screen Strings -->
+    <string name="notification_preferences_title">Notification Preferences</string>
+    <string name="daily_tips">Daily Tips</string>
+    <string name="daily_tips_description">Receive a daily health or wellness tip</string>
+    <string name="submission_reminders">Submission Reminders</string>
+    <string name="submission_reminders_description">Get reminders to check and submit your symptoms regularly</string>
+    <string name="risk_alerts">Risk Alerts</string>
+    <string name="risk_alerts_description">Be alerted when a high-risk status is detected</string>
+    <string name="privacy_assurance">Your privacy and health information are protected</string>
+
+    <!-- Logout Confirmation Modal Strings -->
+    <string name="logout_confirmation_title">Are you sure you want to logout?</string>
+    <string name="logout_confirmation_description">You will need to log in again to access your health data.</string>
+    <string name="cancel">Cancel</string>
+    <string name="logout_confirm">Logout</string>
+    <!-- My Profile Screen Strings -->
+    <string name="my_profile_title">My Profile</string>
+    <string name="profile_name">Sarah Johnson</string>
+    <string name="profile_age">34 years</string>
+    <string name="profile_risk_low">Low Risk</string>
+    <string name="profile_completion">Profile Completion</string>
+    <string name="profile_complete_percent">80% Complete</string>
+    <string name="profile_complete_instruction">Complete your profile for better prediction accuracy</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="view_history">View History</string>
+    <string name="saved_reports">Saved Reports</string>
+    <string name="health_guide">Health Guide</string>
+    <string name="health_summary">Health Summary</string>
+    <string name="last_updated">Last updated: May 15, 2023</string>
+    <string name="summary_text">No concerning signs detected. Keep up with regular self-examinations.</string>
+</resources>
