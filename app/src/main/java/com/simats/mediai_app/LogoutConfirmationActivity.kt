@@ -27,7 +27,7 @@ class LogoutConfirmationActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         // Cancel button - go to settings page
         cancelButton.setOnClickListener {
-            val intent = Intent(this, settingspage::class.java)
+            val intent = Intent(this, SettingsFragment::class.java)
             startActivity(intent)
             finish()
         }

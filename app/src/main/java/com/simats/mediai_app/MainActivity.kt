@@ -1,37 +1,31 @@
 package com.simats.mediai_app
 
-import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.simats.mediai_app.R // Make sure R is imported if it's not automatically resolved
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var getStartedBtn : Button
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Correct way to reference a layout file in Kotlin/Java
-        // Layout files are referenced using R.layout.your_layout_name (without .xml extension)
-        setContentView(R.layout.getstarted_page)
+        setContentView(R.layout.activity_main)
 
-        // Ensure your root layout in getstarted_page.xml has an ID, e.g., android:id="@+id/main_layout"
-        // Then reference it here:
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rootLayout)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        // Set up Navigation
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
 
-        getStartedBtn = findViewById(R.id.getStartedBtn)
-        getStartedBtn.setOnClickListener {
-            val intent = Intent(this , getstart::class.java)
-            startActivity(intent)
-        }
+        // Set up Bottom Navigation
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+        bottomNav.setupWithNavController(navController)
+
+        // Set up bottom navigation colors
+        bottomNav.setItemIconTintList(null)
+        bottomNav.setItemTextColor(null)
     }
 }

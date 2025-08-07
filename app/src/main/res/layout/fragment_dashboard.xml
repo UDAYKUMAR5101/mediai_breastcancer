@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F9FAFB"
-    tools:context=".dashboardupdateded">
+    tools:context=".DashboardFragment">
 
     <LinearLayout
         android:orientation="vertical"
@@ -54,6 +54,7 @@
 
             <!-- Card 1: Risk Level -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/riskLevelCard"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
@@ -495,42 +496,11 @@
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
-        <!-- Bottom Buttons -->
-        <LinearLayout
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="24dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
 
-            <Button
-                android:id="@+id/sharebutton"
-                android:text="Share Report"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="12dp"
-                android:backgroundTint="?attr/colorPrimary"
-                android:textColor="?android:textColorPrimary"/>
-
-
-            <Button
-                android:id="@+id/settingsButton"
-                android:text="Settings"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="12dp"
-                android:backgroundTint="@color/material_dynamic_neutral50"
-                android:textColor="?android:textColorPrimary"/>
-
-
-        </LinearLayout>
-
-        <!-- Spacer for bottom gesture bar -->
+        <!-- Spacer for bottom navigation -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="30dp" />
+            android:layout_height="80dp" />
 
     </LinearLayout>
-</ScrollView>
+</ScrollView> 

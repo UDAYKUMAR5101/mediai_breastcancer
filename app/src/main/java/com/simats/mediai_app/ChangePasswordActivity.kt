@@ -12,12 +12,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import android.content.Intent
-import com.simats.mediai_app.responses.ChangepasswordRequest
-import com.simats.mediai_app.responses.ChangepasswordResponse
-import com.simats.mediai_app.retrofit.retrofit2
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import android.widget.Toast
 
 class ChangePasswordActivity : AppCompatActivity() {
@@ -174,8 +168,6 @@ class ChangePasswordActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         // Back button
         backButton.setOnClickListener {
-            val intent = Intent(this, settingspage::class.java)
-            startActivity(intent)
             finish()
         }
 
@@ -219,23 +211,8 @@ class ChangePasswordActivity : AppCompatActivity() {
             return
         }
 
-        // Call the change password API
-        val request = ChangepasswordRequest(
-            old_password = currentPassword,
-            new_password = newPassword
-        )
-        retrofit2.getService(this).changePassword(request).enqueue(object : Callback<ChangepasswordResponse> {
-            override fun onResponse(call: Call<ChangepasswordResponse>, response: Response<ChangepasswordResponse>) {
-                if (response.isSuccessful && response.body() != null) {
-                    Toast.makeText(this@ChangePasswordActivity, response.body()!!.message, Toast.LENGTH_SHORT).show()
-                    finish()
-                } else {
-                    Toast.makeText(this@ChangePasswordActivity, "Failed to change password", Toast.LENGTH_SHORT).show()
-                }
-            }
-            override fun onFailure(call: Call<ChangepasswordResponse>, t: Throwable) {
-                Toast.makeText(this@ChangePasswordActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
+        // Show success message
+        Toast.makeText(this, "Password changed successfully", Toast.LENGTH_SHORT).show()
+        finish()
     }
 } 

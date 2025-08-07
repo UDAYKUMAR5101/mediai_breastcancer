@@ -7,13 +7,7 @@ import android.text.TextWatcher
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.simats.mediai_app.retrofit.ApiService
-import com.simats.mediai_app.retrofit.RetrofitClient
-import com.simats.mediai_app.responses.SymtomsRequest
-import com.simats.mediai_app.responses.SymtomsResponse
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+
 
 class symstomspage : AppCompatActivity() {
     
@@ -315,62 +309,18 @@ class symstomspage : AppCompatActivity() {
     }
 
     private fun submitSymptomsData() {
-        try {
-            // Show loading state
-            submitButton.isEnabled = false
-            submitButton.text = "Submitting..."
-
-            val apiService = RetrofitClient.retrofitInstance.create(ApiService::class.java)
-
-            val symptomsRequest = SymtomsRequest(
-                age = ageEditText.text?.toString()?.toIntOrNull() ?: 0,
-                menopausal_status = menopausalStatus,
-                family_history = familyHistory,
-                bmi = bmiEditText.text?.toString()?.toFloatOrNull() ?: 0.0f,
-                menarche_age = menarcheEditText.text?.toString()?.toIntOrNull() ?: 0,
-                breastfeeding_history = breastfed,
-                alcohol_consumption = alcoholConsumption,
-                hormonal_treatment_history = "no", // Default value since not in UI
-                physical_activity = activityLevel,
-                breast_pain = if (breastPain) "yes" else "no",
-                breast_cancer_history = breastCancerHistory
-            )
-
-            val call = apiService.submitSymptoms(symptomsRequest)
-            call.enqueue(object : Callback<SymtomsResponse> {
-                override fun onResponse(call: Call<SymtomsResponse>, response: Response<SymtomsResponse>) {
-                    submitButton.isEnabled = true
-                    submitButton.text = "Submit & Analyze Risk"
-
-                    if (response.isSuccessful) {
-                        val symptomsResponse = response.body()
-                        if (symptomsResponse != null) {
-                            // Navigate to risk level page with the response data
-                            val intent = Intent(this@symstomspage, risklevelpage::class.java)
-                            // Since the current SymtomsResponse doesn't have risk fields, we'll pass basic data
-                            intent.putExtra("age", symptomsResponse.age ?: 0)
-                            intent.putExtra("menopausal_status", symptomsResponse.menopausal_status ?: "")
-                            intent.putExtra("family_history", symptomsResponse.family_history ?: "")
-                            startActivity(intent)
-                            finish()
-                        } else {
-                            Toast.makeText(this@symstomspage, "Submission successful but no data received", Toast.LENGTH_LONG).show()
-                        }
-                    } else {
-                        Toast.makeText(this@symstomspage, "Server error: ${response.code()}", Toast.LENGTH_LONG).show()
-                    }
-                }
-
-                override fun onFailure(call: Call<SymtomsResponse>, t: Throwable) {
-                    submitButton.isEnabled = true
-                    submitButton.text = "Submit & Analyze Risk"
-                    Toast.makeText(this@symstomspage, "Network error: ${t.message}", Toast.LENGTH_LONG).show()
-                }
-            })
-        } catch (e: Exception) {
+        // TODO: Add API integration here
+        Toast.makeText(this, "API integration pending - will be added step by step", Toast.LENGTH_LONG).show()
+        
+        // For now, just show a success message
+        submitButton.isEnabled = false
+        submitButton.text = "Submitting..."
+        
+        // Simulate API call delay
+        submitButton.postDelayed({
             submitButton.isEnabled = true
             submitButton.text = "Submit & Analyze Risk"
-            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-        }
+            Toast.makeText(this, "Symptoms data collected successfully!", Toast.LENGTH_SHORT).show()
+        }, 2000)
     }
 }

@@ -20,7 +20,7 @@ class successpage : AppCompatActivity() {
         val btnViewResult = findViewById<android.widget.Button>(R.id.btn_view_result)
         val btnHistoryPage = findViewById<android.widget.Button>(R.id.btn_history_page)
         btnViewResult.setOnClickListener {
-            val intent = android.content.Intent(this, risklevelpage::class.java)
+            val intent = android.content.Intent(this, RiskFragment::class.java)
             startActivity(intent)
         }
         btnHistoryPage.setOnClickListener {

@@ -35,7 +35,7 @@ class NotificationPreferencesActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         // Back button
         backButton.setOnClickListener {
-            val intent = Intent(this, settingspage::class.java)
+            val intent = Intent(this, SettingsFragment::class.java)
             startActivity(intent)
             finish()
         }

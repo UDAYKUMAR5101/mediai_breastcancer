@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="Home" />
+    
+    <item
+        android:id="@+id/nav_risk"
+        android:icon="@drawable/ic_risk"
+        android:title="Risk Level" />
+    
+    <item
+        android:id="@+id/nav_chat"
+        android:icon="@drawable/ic_chat"
+        android:title="AI Chat Bot" />
+    
+    <item
+        android:id="@+id/nav_more"
+        android:icon="@drawable/ic_settings"
+        android:title="More" />
+</menu> 

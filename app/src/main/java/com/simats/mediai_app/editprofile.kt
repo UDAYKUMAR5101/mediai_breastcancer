@@ -1,26 +1,36 @@
 package com.simats.mediai_app
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.simats.mediai_app.responses.ProfileRequest
-import com.simats.mediai_app.responses.ProfileResponse
-import com.simats.mediai_app.responses.ProfileData
-import com.simats.mediai_app.retrofit.retrofit2
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,10 +43,26 @@ class editprofile : AppCompatActivity() {
     private lateinit var fullNameCounter: TextView
     private lateinit var medicalNotesCounter: TextView
     private lateinit var saveChangesButton: Button
+    private lateinit var profileImageView: ImageView
+    private lateinit var changePhotoText: TextView
+    
+    // Photo selection variables
+    private var selectedImageFile: File? = null
+    private var cameraImageUri: Uri? = null
+    
+    // Activity Result Launchers
+    private lateinit var cameraPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var storagePermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var takePictureLauncher: ActivityResultLauncher<Uri>
+    private lateinit var pickImageLauncher: ActivityResultLauncher<String>
     
     private val calendar = Calendar.getInstance()
     private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    private var isProfileLoaded = false
+    
+    companion object {
+        private const val TAG = "EditProfileActivity"
+        private const val MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
+    }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,12 +76,17 @@ class editprofile : AppCompatActivity() {
         
         // Initialize all views
         initializeViews()
+        
+        // Setup photo functionality
+        setupPermissionLaunchers()
+        setupActivityResultLaunchers()
+        setupPhotoSelection()
+        
         setupDatePicker()
         setupCharacterCounters()
         setupSaveButton()
-        
-        // Load existing profile data
-        loadProfileData()
+        setupBackButton()
+        loadUserData()
     }
     
     private fun initializeViews() {
@@ -68,12 +99,9 @@ class editprofile : AppCompatActivity() {
         medicalNotesCounter = findViewById(R.id.medicalNotesCounter)
         saveChangesButton = findViewById(R.id.saveChangesButton)
         
-        // Back arrow navigation to profile page
-        findViewById<View>(R.id.backButton).setOnClickListener {
-            val intent = Intent(this, myprofilepage::class.java)
-            startActivity(intent)
-            finish()
-        }
+        // Profile image views
+        profileImageView = findViewById(R.id.profileImageView)
+        changePhotoText = findViewById(R.id.changePhotoText)
     }
     
     private fun setupDatePicker() {
@@ -137,6 +165,32 @@ class editprofile : AppCompatActivity() {
         }
     }
     
+    private fun setupBackButton() {
+        findViewById<View>(R.id.backButton)?.setOnClickListener {
+            finish()
+        }
+    }
+    
+    private fun loadUserData() {
+        // Load saved username from signup/login and populate the full name field
+        val savedUsername = Sessions.getUsername(this)
+        val savedEmail = Sessions.getUserEmail(this)
+        
+        Log.d(TAG, "Loading user data - Username: $savedUsername, Email: $savedEmail")
+        
+        if (!savedUsername.isNullOrEmpty()) {
+            fullNameEditText.setText(savedUsername)
+            // Update character counter
+            fullNameCounter.text = "${savedUsername.length}/50"
+            Log.d(TAG, "Username loaded and displayed: $savedUsername")
+        } else {
+            Log.w(TAG, "No saved username found")
+        }
+        
+        // Optionally, you can also pre-fill other fields if you have that data
+        // For example, if you save age, gender, etc. during signup
+    }
+    
     private fun validateInputs(): Boolean {
         val fullName = fullNameEditText.text.toString().trim()
         val age = ageEditText.text.toString().trim()
@@ -171,115 +225,273 @@ class editprofile : AppCompatActivity() {
         return true
     }
     
-    private fun loadProfileData() {
-        // Show loading state
-        saveChangesButton.isEnabled = false
-        saveChangesButton.text = getString(R.string.loading)
-        
-        retrofit2.getService(this).getProfile().enqueue(object : Callback<ProfileResponse> {
-            override fun onResponse(call: Call<ProfileResponse>, response: Response<ProfileResponse>) {
-                saveChangesButton.isEnabled = true
-                saveChangesButton.text = getString(R.string.save_changes)
-                
-                if (response.isSuccessful && response.body() != null) {
-                    val profileData = response.body()?.data
-                    if (profileData != null) {
-                        populateProfileData(profileData)
-                        isProfileLoaded = true
-                    } else {
-                        // No existing profile data, user can create new profile
-                        isProfileLoaded = false
-                    }
-                } else {
-                    // Failed to load profile, assume new profile
-                    isProfileLoaded = false
-                    Toast.makeText(this@editprofile, getString(R.string.failed_to_load_profile), Toast.LENGTH_SHORT).show()
-                }
-            }
-            
-            override fun onFailure(call: Call<ProfileResponse>, t: Throwable) {
-                saveChangesButton.isEnabled = true
-                saveChangesButton.text = getString(R.string.save_changes)
-                // Failed to load profile, assume new profile
-                isProfileLoaded = false
-                Toast.makeText(this@editprofile, getString(R.string.network_error, t.message), Toast.LENGTH_SHORT).show()
-            }
-        })
-    }
-    
-    private fun populateProfileData(profileData: ProfileData) {
-        // Populate the form fields with existing data
-        fullNameEditText.setText(profileData.full_name ?: "")
-        ageEditText.setText(profileData.age.toString())
-        genderEditText.setText(profileData.gender)
-        dateOfBirthEditText.setText(profileData.date_of_birth)
-        medicalNotesEditText.setText(profileData.notes)
-        
-        // Update character counters
-        fullNameCounter.text = "${fullNameEditText.text.length}/50"
-        medicalNotesCounter.text = "${medicalNotesEditText.text.length}/300"
-    }
-    
     private fun saveProfile() {
-        val fullName = fullNameEditText.text.toString().trim()
-        val age = ageEditText.text.toString().trim().toInt()
-        val gender = genderEditText.text.toString()
-        val dateOfBirth = dateOfBirthEditText.text.toString().trim()
-        val medicalNotes = medicalNotesEditText.text.toString().trim()
+        // Save updated profile data locally
+        val updatedName = fullNameEditText.text.toString().trim()
+        val currentEmail = Sessions.getUserEmail(this) ?: ""
         
-        // For now, using a placeholder image. In a real app, you would handle image upload
-        val image = ""
+        // Update the stored username with the new name
+        Sessions.saveUserData(this, updatedName, currentEmail)
+        Log.d(TAG, "Profile data updated - Name: $updatedName")
         
-        val profileRequest = ProfileRequest(
-            age = age,
-            gender = gender,
-            date_of_birth = dateOfBirth,
-            notes = medicalNotes,
-            image = image
-        )
-        
-        // Show loading state
-        saveChangesButton.isEnabled = false
-        saveChangesButton.text = getString(R.string.saving)
-        
-        // Use PATCH if profile exists, POST if creating new profile
-        val apiCall = if (isProfileLoaded) {
-            retrofit2.getService(this).updateProfile(profileRequest)
-        } else {
-            retrofit2.getService(this).createProfile(profileRequest)
+        // Show success message
+        Toast.makeText(this, "Profile saved successfully", Toast.LENGTH_SHORT).show()
+        finish()
+    }
+    
+    // Photo Selection Methods
+    private fun setupPermissionLaunchers() {
+        cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                openCamera()
+            } else {
+                showPermissionDeniedDialog("Camera permission is required to take photos")
+            }
         }
         
-        apiCall.enqueue(object : Callback<ProfileResponse> {
-            override fun onResponse(call: Call<ProfileResponse>, response: Response<ProfileResponse>) {
-                saveChangesButton.isEnabled = true
-                saveChangesButton.text = getString(R.string.save_changes)
-                
-                if (response.isSuccessful && response.body() != null) {
-                    val message = if (isProfileLoaded) {
-                        getString(R.string.profile_updated_success)
-                    } else {
-                        getString(R.string.profile_created_success)
-                    }
-                    Toast.makeText(this@editprofile, message, Toast.LENGTH_SHORT).show()
-                    // Navigate back to profile page
-                    val intent = Intent(this@editprofile, myprofilepage::class.java)
-                    startActivity(intent)
-                    finish()
-                } else {
-                    val message = if (isProfileLoaded) {
-                        getString(R.string.profile_update_failed)
-                    } else {
-                        getString(R.string.profile_create_failed)
-                    }
-                    Toast.makeText(this@editprofile, message, Toast.LENGTH_SHORT).show()
+        storagePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                openGallery()
+            } else {
+                showPermissionDeniedDialog("Storage permission is required to select images")
+            }
+        }
+    }
+    
+    private fun setupActivityResultLaunchers() {
+        takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success && cameraImageUri != null) {
+                handleImageSelection(cameraImageUri!!)
+            } else {
+                Toast.makeText(this, "Failed to capture image", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
+        pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let { handleImageSelection(it) }
+        }
+    }
+    
+    private fun setupPhotoSelection() {
+        changePhotoText.setOnClickListener {
+            showPhotoSelectionDialog()
+        }
+        
+        profileImageView.setOnClickListener {
+            showPhotoSelectionDialog()
+        }
+    }
+    
+    private fun showPhotoSelectionDialog() {
+        val options = arrayOf("Take Photo", "Choose from Gallery")
+        
+        AlertDialog.Builder(this)
+            .setTitle("Select Profile Photo")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> requestCameraPermission()
+                    1 -> requestStoragePermission()
                 }
             }
-            
-            override fun onFailure(call: Call<ProfileResponse>, t: Throwable) {
-                saveChangesButton.isEnabled = true
-                saveChangesButton.text = getString(R.string.save_changes)
-                Toast.makeText(this@editprofile, getString(R.string.network_error, t.message), Toast.LENGTH_SHORT).show()
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    private fun requestCameraPermission() {
+        when {
+            checkSelfPermission(Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED -> {
+                openCamera()
             }
-        })
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
+                showPermissionRationaleDialog(
+                    "Camera Permission Required",
+                    "This app needs camera permission to take photos for your profile picture.",
+                    Manifest.permission.CAMERA
+                ) { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+            }
+            else -> {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
+    
+    private fun requestStoragePermission() {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        
+        when {
+            checkSelfPermission(permission) == android.content.pm.PackageManager.PERMISSION_GRANTED -> {
+                openGallery()
+            }
+            shouldShowRequestPermissionRationale(permission) -> {
+                showPermissionRationaleDialog(
+                    "Storage Permission Required",
+                    "This app needs storage permission to select images from your gallery for your profile picture.",
+                    permission
+                ) { storagePermissionLauncher.launch(permission) }
+            }
+            else -> {
+                storagePermissionLauncher.launch(permission)
+            }
+        }
+    }
+    
+    private fun openCamera() {
+        try {
+            val imageFile = createImageFile()
+            cameraImageUri = FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.fileprovider",
+                imageFile
+            )
+            takePictureLauncher.launch(cameraImageUri!!)
+        } catch (e: IOException) {
+            Log.e(TAG, "Error creating image file", e)
+            Toast.makeText(this, "Error setting up camera", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun openGallery() {
+        pickImageLauncher.launch("image/*")
+    }
+    
+    private fun createImageFile(): File {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val imageFileName = "PROFILE_${timeStamp}_"
+        val storageDir = getExternalFilesDir(null)
+        return File.createTempFile(imageFileName, ".jpg", storageDir)
+    }
+    
+    private fun handleImageSelection(uri: Uri) {
+        try {
+            val bitmap = loadBitmapFromUri(uri)
+            if (bitmap == null) {
+                Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show()
+                return
+            }
+            
+            // Convert URI to File and check size
+            val file = uriToFile(uri)
+            if (file.length() > MAX_IMAGE_SIZE) {
+                Toast.makeText(this, "Image size must be less than 10MB", Toast.LENGTH_LONG).show()
+                return
+            }
+            
+            // Display image and store file reference
+            displayImage(bitmap)
+            selectedImageFile = file
+            Toast.makeText(this, "Profile photo updated successfully", Toast.LENGTH_SHORT).show()
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling image selection", e)
+            Toast.makeText(this, "Error processing image: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun uriToFile(uri: Uri): File {
+        return when (uri.scheme) {
+            "file" -> File(uri.path!!)
+            "content" -> {
+                val inputStream = contentResolver.openInputStream(uri)
+                val file = createImageFile()
+                inputStream?.use { input ->
+                    FileOutputStream(file).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                file
+            }
+            else -> throw IllegalArgumentException("Unsupported URI scheme: ${uri.scheme}")
+        }
+    }
+    
+    private fun loadBitmapFromUri(uri: Uri): Bitmap? {
+        return try {
+            val inputStream = contentResolver.openInputStream(uri)
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeStream(inputStream, null, options)
+            inputStream?.close()
+            
+            // Calculate sample size for memory optimization
+            val sampleSize = calculateInSampleSize(options, 800, 800)
+            
+            val finalInputStream = contentResolver.openInputStream(uri)
+            val finalOptions = BitmapFactory.Options().apply {
+                inSampleSize = sampleSize
+            }
+            val bitmap = BitmapFactory.decodeStream(finalInputStream, null, finalOptions)
+            finalInputStream?.close()
+            bitmap
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading bitmap from URI", e)
+            null
+        }
+    }
+    
+    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+        val height = options.outHeight
+        val width = options.outWidth
+        var inSampleSize = 1
+        
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight = height / 2
+            val halfWidth = width / 2
+            
+            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
+    }
+    
+    private fun displayImage(bitmap: Bitmap) {
+        profileImageView.apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            setImageBitmap(bitmap)
+            // Remove the tint when showing actual photo
+            imageTintList = null
+            background = null
+        }
+    }
+    
+    private fun showPermissionDeniedDialog(message: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Permission Denied")
+            .setMessage(message)
+            .setPositiveButton("Settings") { _, _ ->
+                // Open app settings
+                val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                intent.data = Uri.fromParts("package", packageName, null)
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    private fun showPermissionRationaleDialog(
+        title: String,
+        message: String,
+        permission: String,
+        onPositive: () -> Unit
+    ) {
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Grant Permission") { _, _ -> onPositive() }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    // Optional: Convert image to MultipartBody.Part for future upload
+    fun createImageMultipart(): MultipartBody.Part? {
+        return selectedImageFile?.let { file ->
+            val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+            MultipartBody.Part.createFormData("profile_image", file.name, requestBody)
+        }
     }
 }

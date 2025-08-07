@@ -50,7 +50,7 @@ class myprofilepage : AppCompatActivity() {
 
         // Back arrow navigation to dashboard
         findViewById<View>(R.id.backButton).setOnClickListener {
-            val intent = Intent(this, dashboardupdateded::class.java)
+            val intent = Intent(this, DashboardFragment::class.java)
             startActivity(intent)
             finish()
         }

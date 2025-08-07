@@ -8,14 +8,21 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
     
-    private const val BASE_URL = "https://z666d97d-8000.inc1.devtunnels.ms/"
+    const val BASE_URL = "https://z666d97d-8000.inc1.devtunnels.ms/"
     
     private val _retrofitInstance: Retrofit by lazy {
         val logging = HttpLoggingInterceptor()
         logging.level = HttpLoggingInterceptor.Level.BODY
         
+        // Add custom interceptor for debugging
+        val debugInterceptor = HttpLoggingInterceptor { message ->
+            android.util.Log.d("RetrofitDebug", message)
+        }
+        debugInterceptor.level = HttpLoggingInterceptor.Level.BODY
+        
         val client = OkHttpClient.Builder()
             .addInterceptor(logging)
+            .addInterceptor(debugInterceptor)
             .connectTimeout(20, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
@@ -30,4 +37,8 @@ object RetrofitClient {
     
     val retrofitInstance: Retrofit
         get() = _retrofitInstance
+        
+    fun getClient(): Retrofit {
+        return _retrofitInstance
+    }
 } 

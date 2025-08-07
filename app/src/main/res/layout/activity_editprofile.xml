@@ -79,10 +79,11 @@
                     android:padding="8dp">
 
                     <ImageView
+                        android:id="@+id/profileImageView"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/profile_photo"
-                        android:scaleType="centerInside"
+                        android:scaleType="centerCrop"
                         android:background="@color/edit_profile_disabled_bg"
                         app:tint="@color/edit_profile_camera_icon" />
 

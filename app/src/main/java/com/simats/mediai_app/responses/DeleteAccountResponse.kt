@@ -1,9 +1,8 @@
 package com.simats.mediai_app.responses
 
-
-data class DeleteRequest(
+data class DeleteAccountRequest (
     var password: String
-   )
-data class DeleteResponse(
+)
+data class DeleteAccountResponse (
     var message: String
 )

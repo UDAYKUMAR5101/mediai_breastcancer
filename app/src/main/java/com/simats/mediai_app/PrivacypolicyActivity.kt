@@ -21,7 +21,7 @@ class PrivacypolicyActivity : AppCompatActivity() {
         }
         // Back arrow navigation to settings page
         findViewById<View>(R.id.backButton).setOnClickListener {
-            val intent = Intent(this, settingspage::class.java)
+            val intent = Intent(this, SettingsFragment::class.java)
             startActivity(intent)
             finish()
         }

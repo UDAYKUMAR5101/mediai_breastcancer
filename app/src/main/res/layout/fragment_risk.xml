@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/white"
     android:padding="0dp"
-    tools:context=".risklevelpage">
+    tools:context=".RiskFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,16 +20,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:layout_marginTop="22dp"
             android:gravity="center_vertical">
-
-            <ImageButton
-                android:id="@+id/backButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:src="@drawable/back_side_arrow"
-                android:contentDescription="Back"
-                app:tint="@android:color/black" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -37,7 +29,6 @@
                 android:text="Risk Assessment Result"
                 android:textStyle="bold"
                 android:textSize="18sp"
-                android:layout_marginStart="8dp"
                 android:textColor="@android:color/black" />
         </LinearLayout>
 
@@ -283,7 +274,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSaveResult"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:text="Save Result"
             style="@style/Widget.MaterialComponents.Button"
             android:textAllCaps="false"
@@ -298,7 +289,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBreastCancerGuide"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:text="Breast Cancer Guide"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:textAllCaps="false"
@@ -309,5 +300,10 @@
             android:textColor="#2196F3"
             app:iconTint="#2196F3" />
 
+        <!-- Spacer for bottom navigation -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="80dp" />
+
     </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+</androidx.core.widget.NestedScrollView> 

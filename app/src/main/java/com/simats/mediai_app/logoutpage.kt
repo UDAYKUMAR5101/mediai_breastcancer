@@ -22,7 +22,7 @@ class logoutpage : AppCompatActivity() {
         }
         cancelButton = findViewById(R.id.cancelButton)
         cancelButton.setOnClickListener {
-            val intent = Intent(this , settingspage::class.java)
+            val intent = Intent(this , SettingsFragment::class.java)
             startActivity(intent)
         }
         logoutButton = findViewById(R.id.logoutButton)
