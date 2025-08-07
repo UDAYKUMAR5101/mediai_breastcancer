@@ -55,7 +55,7 @@ interface ApiService {
              @Body deleteAccountRequest: DeleteAccountRequest
             ): Call<DeleteAccountResponse>
 
-    @POST("api/api/chatbot/")
+    @POST("api/chatbot/")
     fun chatbot(@Header("Authorization") token: String, @Body chatbotRequest: ChatRequest): Call<ChatResponse>
 
     @POST("api/upload-image/")

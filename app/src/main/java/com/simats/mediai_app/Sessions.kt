@@ -10,6 +10,7 @@ object Sessions {
     private const val KEY_IS_LOGGED_IN = "is_logged_in"
     private const val KEY_USERNAME = "username"
     private const val KEY_USER_EMAIL = "user_email"
+    private const val KEY_CHAT_HISTORY = "chat_history"
     
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -73,5 +74,16 @@ object Sessions {
             .putString(KEY_USER_EMAIL, email)
             .putBoolean(KEY_IS_LOGGED_IN, true)
             .apply()
+    }
+    
+    fun saveChatHistory(context: Context, chatHistory: String) {
+        val prefs = getSharedPreferences(context)
+        prefs.edit()
+            .putString(KEY_CHAT_HISTORY, chatHistory)
+            .apply()
+    }
+    
+    fun getChatHistory(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_CHAT_HISTORY, null)
     }
 }

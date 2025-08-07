@@ -30,6 +30,16 @@
             android:textStyle="bold"
             android:textColor="@color/black" />
 
+        <ImageButton
+            android:id="@+id/clearChatButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_delete"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#2F80ED"
+            android:layout_marginEnd="16dp"
+            android:contentDescription="Clear chat history" />
+            
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
@@ -47,6 +57,14 @@
         android:clipToPadding="false"
         android:background="#F8F9FA" />
 
+    <!-- Loading Indicator -->
+    <ProgressBar
+        android:id="@+id/loadingIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+        
     <!-- Input Area -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -75,7 +93,8 @@
                 android:layout_height="wrap_content"
                 android:minHeight="48dp"
                 android:inputType="textMultiLine"
-                android:maxLines="4" />
+                android:maxLines="4"
+                android:imeOptions="actionSend" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -97,4 +116,4 @@
         android:layout_width="match_parent"
         android:layout_height="80dp" />
 
-</LinearLayout> 
+</LinearLayout>
