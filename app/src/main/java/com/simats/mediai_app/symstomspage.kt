@@ -7,6 +7,14 @@ import android.text.TextWatcher
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.simats.mediai_app.retrofit.retrofit2
+import com.simats.mediai_app.responses.SymptomsRequest
+import com.simats.mediai_app.responses.SymptomsResponse
+import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 
 class symstomspage : AppCompatActivity() {
@@ -309,18 +317,80 @@ class symstomspage : AppCompatActivity() {
     }
 
     private fun submitSymptomsData() {
-        // TODO: Add API integration here
-        Toast.makeText(this, "API integration pending - will be added step by step", Toast.LENGTH_LONG).show()
-        
-        // For now, just show a success message
+        // Show loading state
         submitButton.isEnabled = false
         submitButton.text = "Submitting..."
         
-        // Simulate API call delay
-        submitButton.postDelayed({
-            submitButton.isEnabled = true
-            submitButton.text = "Submit & Analyze Risk"
-            Toast.makeText(this, "Symptoms data collected successfully!", Toast.LENGTH_SHORT).show()
-        }, 2000)
+        // Collect form data
+        val age = ageEditText.text.toString().toIntOrNull() ?: 0
+        val bmi = bmiEditText.text.toString().toFloatOrNull()
+        val menarcheAge = menarcheEditText.text.toString().toIntOrNull()
+        
+        // Create request object
+        val symptomsRequest = SymptomsRequest(
+            age = age,
+            menopausal_status = menopausalStatus,
+            family_history = familyHistory,
+            bmi = bmi,
+            menarche_age = menarcheAge,
+            breastfeeding_history = breastfed,
+            alcohol_consumption = alcoholConsumption,
+            hormonal_treatment_history = "no", // Default value, can be added to UI later
+            physical_activity = activityLevel,
+            breast_pain = breastPain,
+            breast_cancer = breastCancerHistory
+        )
+        
+        // Make API call
+        val apiService = retrofit2.getService(this)
+        val call = apiService.predictSymptoms(symptomsRequest)
+        
+        call.enqueue(object : Callback<SymptomsResponse> {
+            override fun onResponse(call: Call<SymptomsResponse>, response: Response<SymptomsResponse>) {
+                submitButton.isEnabled = true
+                submitButton.text = "Submit & Analyze Risk"
+                
+                if (response.isSuccessful) {
+                    val symptomsResponse = response.body()
+                    if (symptomsResponse != null) {
+                        // Navigate to risk level page with results
+                        navigateToRiskLevelPage(symptomsResponse)
+                    } else {
+                        Toast.makeText(this@symstomspage, "Empty response from server", Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    // Handle error response
+                    val errorMessage = when (response.code()) {
+                        400 -> "Invalid request data"
+                        401 -> "Unauthorized access"
+                        500 -> "Server error"
+                        else -> "Network error: ${response.code()}"
+                    }
+                    Toast.makeText(this@symstomspage, errorMessage, Toast.LENGTH_LONG).show()
+                }
+            }
+            
+            override fun onFailure(call: Call<SymptomsResponse>, t: Throwable) {
+                submitButton.isEnabled = true
+                submitButton.text = "Submit & Analyze Risk"
+                
+                val errorMessage = when {
+                    t.message?.contains("timeout", ignoreCase = true) == true -> "Request timeout. Please try again."
+                    t.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your connection."
+                    else -> "Error: ${t.message}"
+                }
+                Toast.makeText(this@symstomspage, errorMessage, Toast.LENGTH_LONG).show()
+            }
+        })
+    }
+    
+    private fun navigateToRiskLevelPage(symptomsResponse: SymptomsResponse) {
+        val intent = Intent(this, RiskLevelPage::class.java).apply {
+            putExtra("risk_level", symptomsResponse.risk_level)
+            putExtra("prediction_percentage", symptomsResponse.prediction_percentage)
+            putExtra("mode", symptomsResponse.mode)
+        }
+        startActivity(intent)
+        finish() // Close the symptoms page
     }
 }

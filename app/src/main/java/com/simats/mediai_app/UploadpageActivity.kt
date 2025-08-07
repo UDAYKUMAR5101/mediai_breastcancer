@@ -3,6 +3,7 @@ package com.simats.mediai_app
 import android.Manifest
 import android.content.ContentValues
 import android.content.Intent
+import com.simats.mediai_app.RiskLevelPage
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -26,6 +27,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.simats.mediai_app.retrofit.ApiService
 import com.simats.mediai_app.retrofit.RetrofitClient
 import com.simats.mediai_app.responses.UploadResponse
+import com.simats.mediai_app.responses.ImagePredictionResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -323,7 +325,7 @@ class UploadpageActivity : AppCompatActivity() {
     
     private fun uploadImage() {
         if (selectedImageFile == null) {
-            Toast.makeText(this, "Please select an image first", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Please select an image to analyze", Toast.LENGTH_SHORT).show()
             return
         }
         
@@ -332,45 +334,55 @@ class UploadpageActivity : AppCompatActivity() {
         
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = uploadImageToServer(selectedImageFile!!)
+                val response = predictImageRisk(selectedImageFile!!)
                 
                 withContext(Dispatchers.Main) {
                     setUploadingState(false)
-                    handleUploadResponse(response)
+                    handleImagePredictionResponse(response)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error uploading image", e)
+                Log.e(TAG, "Error predicting image risk", e)
                 withContext(Dispatchers.Main) {
                     setUploadingState(false)
-                    Toast.makeText(this@UploadpageActivity, "Upload failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@UploadpageActivity, "Prediction failed: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
     
-    private suspend fun uploadImageToServer(file: File): UploadResponse {
+    private suspend fun predictImageRisk(file: File): ImagePredictionResponse {
         val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
         val body = MultipartBody.Part.createFormData("image", file.name, requestFile)
         
         return withContext(Dispatchers.IO) {
             try {
-                val call = apiService.uploadImage(body)
+                val call = apiService.predictImageRisk(body)
                 val response = call.execute()
-                response.body() ?: UploadResponse(false, "No response from server")
+                if (response.isSuccessful && response.body() != null) {
+                    response.body()!!
+                } else {
+                    throw Exception("API call failed: ${response.code()} ${response.message()}")
+                }
             } catch (e: Exception) {
-                Log.e(TAG, "Network error during upload", e)
-                UploadResponse(false, "Network error: ${e.message}")
+                Log.e(TAG, "Network error during image prediction", e)
+                throw Exception("Network error: ${e.message}")
             }
         }
     }
     
-    private fun handleUploadResponse(response: UploadResponse) {
-        if (response.success) {
-            Toast.makeText(this, "Image uploaded successfully!", Toast.LENGTH_LONG).show()
-            // Navigate to success page or finish activity
-            finish()
-        } else {
-            Toast.makeText(this, "Upload failed: ${response.error ?: response.message}", Toast.LENGTH_LONG).show()
+    private fun handleImagePredictionResponse(response: ImagePredictionResponse) {
+        try {
+            // Navigate to RiskLevelPage with the prediction results
+            val intent = Intent(this, RiskLevelPage::class.java).apply {
+                putExtra("risk_level", response.risk_level)
+                putExtra("prediction_percentage", response.prediction_percentage)
+                putExtra("mode", response.mode)
+            }
+            startActivity(intent)
+            finish() // Close the upload page
+        } catch (e: Exception) {
+            Log.e(TAG, "Error navigating to risk level page", e)
+            Toast.makeText(this, "Error displaying results: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
     
@@ -381,9 +393,9 @@ class UploadpageActivity : AppCompatActivity() {
         progressBar.visibility = if (uploading) View.VISIBLE else View.GONE
         
         if (uploading) {
-            btnSubmitImage.text = "Uploading..."
+            btnSubmitImage.text = "Analyzing Image..."
         } else {
-            btnSubmitImage.text = "Submit Image"
+            btnSubmitImage.text = "Analyze Image"
         }
     }
     

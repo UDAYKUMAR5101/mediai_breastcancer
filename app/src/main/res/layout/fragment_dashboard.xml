@@ -346,8 +346,9 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Rotating Quotes Section -->
         <androidx.cardview.widget.CardView
-            android:id="@+id/symptomPhotoCard"
+            android:id="@+id/quotesCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
@@ -356,95 +357,93 @@
             android:background="@android:color/white">
 
             <LinearLayout
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
+                android:orientation="vertical"
                 android:padding="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <ImageView
-                    android:src="@drawable/upload_image"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginEnd="8dp"
-                    app:tint="#A259FF" />
-
                 <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp">
+
+                    <ImageView
+                        android:src="@drawable/ic_smile"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="8dp"
+                        app:tint="#FF6B6B" />
 
                     <TextView
-                        android:text="Symptom Photo Added"
-                        android:textSize="15sp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:text="Yesterday"
-                        android:textSize="13sp"
-                        android:textColor="#7B7B7B"
+                        android:text="Daily Inspiration"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#FF6B6B"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
 
-                <ImageView
-                    android:src="@drawable/forntarrow"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+                <TextView
+                    android:id="@+id/quoteText"
+                    android:text="You are stronger than you think. Every day is a new opportunity to heal and grow."
+                    android:textSize="15sp"
+                    android:textColor="#333333"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="4dp"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp" />
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/symptomsUpdatedCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            android:background="@android:color/white">
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="20dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <ImageView
-                    android:src="@drawable/dashdocu"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginEnd="8dp"
-                    app:tint="#1ABC9C" />
+                <TextView
+                    android:id="@+id/quoteAuthor"
+                    android:text="- Anonymous"
+                    android:textSize="13sp"
+                    android:textColor="#7B7B7B"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:layout_marginBottom="8dp" />
 
                 <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <TextView
-                        android:text="Symptoms Updated"
-                        android:textSize="15sp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                    <View
+                        android:id="@+id/dot1"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/dot_active"
+                        android:layout_gravity="center" />
 
-                    <TextView
-                        android:text="2 days ago"
-                        android:textSize="13sp"
-                        android:textColor="#7B7B7B"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                    <View
+                        android:id="@+id/dot2"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/dot_inactive"
+                        android:layout_gravity="center" />
+
+                    <View
+                        android:id="@+id/dot3"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/dot_inactive"
+                        android:layout_gravity="center" />
+
+                    <View
+                        android:id="@+id/dot4"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@drawable/dot_inactive"
+                        android:layout_gravity="center" />
                 </LinearLayout>
-
-                <ImageView
-                    android:src="@drawable/forntarrow"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp" />
             </LinearLayout>
-
         </androidx.cardview.widget.CardView>
         <androidx.cardview.widget.CardView
             android:id="@+id/healthTipsCard"

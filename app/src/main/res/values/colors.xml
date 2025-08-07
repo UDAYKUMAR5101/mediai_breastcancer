@@ -71,4 +71,9 @@
     <color name="profile_green_text">#3FD53F</color>
     <color name="profile_card_shadow">#11000000</color>
     <color name="profile_red">#FF6B6B</color>
+    
+    <!-- Risk Level Colors -->
+    <color name="risk_low">#4CAF50</color>
+    <color name="risk_moderate">#FF9800</color>
+    <color name="risk_high">#F44336</color>
 </resources>

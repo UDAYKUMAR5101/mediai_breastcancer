@@ -28,11 +28,20 @@ import androidx.core.view.WindowInsetsCompat
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.simats.mediai_app.retrofit.ApiService
+import com.simats.mediai_app.retrofit.RetrofitClient
+import com.simats.mediai_app.responses.ProfileResponse
+import com.bumptech.glide.Glide
 
 class editprofile : AppCompatActivity() {
     private lateinit var dateOfBirthEditText: EditText
@@ -58,6 +67,12 @@ class editprofile : AppCompatActivity() {
     
     private val calendar = Calendar.getInstance()
     private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    private val apiDateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    
+    // API Service
+    private lateinit var apiService: ApiService
+    private var profileId: Int? = null
+    private var profileExists = false
     
     companion object {
         private const val TAG = "EditProfileActivity"
@@ -86,7 +101,12 @@ class editprofile : AppCompatActivity() {
         setupCharacterCounters()
         setupSaveButton()
         setupBackButton()
-        loadUserData()
+        
+        // Initialize API Service
+        apiService = RetrofitClient.getClient().create(ApiService::class.java)
+        
+        // Load profile data
+        loadProfileData()
     }
     
     private fun initializeViews() {
@@ -159,9 +179,7 @@ class editprofile : AppCompatActivity() {
     
     private fun setupSaveButton() {
         saveChangesButton.setOnClickListener {
-            if (validateInputs()) {
                 saveProfile()
-            }
         }
     }
     
@@ -171,12 +189,56 @@ class editprofile : AppCompatActivity() {
         }
     }
     
-    private fun loadUserData() {
+    private fun loadProfileData() {
+        val token = Sessions.getAccessToken(this)
+        if (token == null) {
+            Log.e(TAG, "No access token found")
+            Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Show loading state
+        saveChangesButton.isEnabled = false
+        saveChangesButton.text = "Loading..."
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = apiService.getProfile("Bearer $token")
+                val profileResponse = response.execute()
+
+                withContext(Dispatchers.Main) {
+                    if (profileResponse.isSuccessful && profileResponse.body() != null) {
+                        val profile = profileResponse.body()!!
+                        profileExists = true
+                        profileId = 1 // Assuming the API returns profile with ID 1
+                        populateProfileData(profile.data)
+                        Log.d(TAG, "Profile loaded successfully")
+                    } else {
+                        // Profile doesn't exist, load local data as fallback
+                        loadLocalUserData()
+                        Log.d(TAG, "Profile doesn't exist, using local data")
+                    }
+                    saveChangesButton.isEnabled = true
+                    saveChangesButton.text = "Save Changes"
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading profile", e)
+                withContext(Dispatchers.Main) {
+                    loadLocalUserData()
+                    saveChangesButton.isEnabled = true
+                    saveChangesButton.text = "Save Changes"
+                    Toast.makeText(this@editprofile, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun loadLocalUserData() {
         // Load saved username from signup/login and populate the full name field
         val savedUsername = Sessions.getUsername(this)
         val savedEmail = Sessions.getUserEmail(this)
         
-        Log.d(TAG, "Loading user data - Username: $savedUsername, Email: $savedEmail")
+        Log.d(TAG, "Loading local user data - Username: $savedUsername, Email: $savedEmail")
         
         if (!savedUsername.isNullOrEmpty()) {
             fullNameEditText.setText(savedUsername)
@@ -186,9 +248,41 @@ class editprofile : AppCompatActivity() {
         } else {
             Log.w(TAG, "No saved username found")
         }
+    }
+
+    private fun populateProfileData(profileData: com.simats.mediai_app.responses.ProfileData) {
+        // Populate form fields with profile data
+        fullNameEditText.setText(profileData.username)
+        fullNameCounter.text = "${profileData.username.length}/50"
         
-        // Optionally, you can also pre-fill other fields if you have that data
-        // For example, if you save age, gender, etc. during signup
+        ageEditText.setText(profileData.age.toString())
+        genderEditText.setText(profileData.gender)
+        
+        // Convert API date format (yyyy-MM-dd) to display format (dd/MM/yyyy)
+        try {
+            val apiDate = apiDateFormatter.parse(profileData.date_of_birth)
+            if (apiDate != null) {
+                dateOfBirthEditText.setText(dateFormatter.format(apiDate))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing date", e)
+        }
+        
+        medicalNotesEditText.setText(profileData.notes)
+        medicalNotesCounter.text = "${profileData.notes.length}/300"
+        
+        // Load profile image if available
+        if (!profileData.image.isNullOrEmpty()) {
+            loadProfileImage(profileData.image)
+        }
+    }
+
+    private fun loadProfileImage(imageUrl: String) {
+        Glide.with(this)
+            .load(imageUrl)
+            .placeholder(R.drawable.profile_photo)
+            .error(R.drawable.profile_photo)
+            .into(profileImageView)
     }
     
     private fun validateInputs(): Boolean {
@@ -226,17 +320,163 @@ class editprofile : AppCompatActivity() {
     }
     
     private fun saveProfile() {
-        // Save updated profile data locally
-        val updatedName = fullNameEditText.text.toString().trim()
-        val currentEmail = Sessions.getUserEmail(this) ?: ""
+        if (!validateInputs()) {
+            return
+        }
+
+        val token = Sessions.getAccessToken(this)
+        if (token == null) {
+            Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Show loading state
+        saveChangesButton.isEnabled = false
+        saveChangesButton.text = "Saving..."
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val profileData = prepareProfileData()
+                
+                if (profileExists && profileId != null) {
+                    // Update existing profile
+                    updateProfileOnServer(token, profileId!!, profileData)
+                } else {
+                    // Create new profile
+                    createProfileOnServer(token, profileData)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error saving profile", e)
+                withContext(Dispatchers.Main) {
+                    saveChangesButton.isEnabled = true
+                    saveChangesButton.text = "Save Changes"
+                    Toast.makeText(this@editprofile, "Error saving profile: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun prepareProfileData(): Map<String, String> {
+        val username = fullNameEditText.text.toString().trim()
+        val age = ageEditText.text.toString().trim()
+        val gender = genderEditText.text.toString().trim()
+        val dateOfBirth = convertDateForAPI(dateOfBirthEditText.text.toString().trim())
+        val notes = medicalNotesEditText.text.toString().trim()
+
+        return mapOf(
+            "username" to username,
+            "age" to age,
+            "gender" to gender,
+            "date_of_birth" to dateOfBirth,
+            "notes" to notes
+        )
+    }
+
+    private fun convertDateForAPI(displayDate: String): String {
+        return try {
+            val parsedDate = dateFormatter.parse(displayDate)
+            if (parsedDate != null) {
+                apiDateFormatter.format(parsedDate)
+            } else {
+                displayDate
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error converting date format", e)
+            displayDate
+        }
+    }
+
+    private suspend fun createProfileOnServer(token: String, profileData: Map<String, String>) {
+        val requestBodyMap = profileData.mapValues { (_, value) ->
+            value.toRequestBody("text/plain".toMediaTypeOrNull())
+        }
+
+        val imagePart = selectedImageFile?.let { file ->
+            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+            MultipartBody.Part.createFormData("image", file.name, requestFile)
+        }
+
+        val call = apiService.createProfile(
+            "Bearer $token",
+            requestBodyMap["username"]!!,
+            requestBodyMap["age"]!!,
+            requestBodyMap["gender"]!!,
+            requestBodyMap["date_of_birth"]!!,
+            requestBodyMap["notes"]!!,
+            imagePart
+        )
+
+        val response = call.execute()
         
-        // Update the stored username with the new name
-        Sessions.saveUserData(this, updatedName, currentEmail)
-        Log.d(TAG, "Profile data updated - Name: $updatedName")
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful && response.body() != null) {
+                val profileResponse = response.body()!!
+                profileExists = true
+                profileId = 1 // Assuming the API returns profile with ID 1
+                
+                // Update local storage
+                Sessions.saveUserData(this@editprofile, profileData["username"]!!, Sessions.getUserEmail(this@editprofile) ?: "")
+                
+                saveChangesButton.isEnabled = true
+                saveChangesButton.text = "Save Changes"
+                Toast.makeText(this@editprofile, "Profile created successfully", Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                // Profile already exists, try PATCH
+                if (response.code() == 400 && response.errorBody()?.string()?.contains("Profile already exists") == true) {
+                    Log.d(TAG, "Profile already exists, trying PATCH")
+                    profileExists = true
+                    profileId = 1
+                    updateProfileOnServer(token, 1, profileData)
+                } else {
+                    saveChangesButton.isEnabled = true
+                    saveChangesButton.text = "Save Changes"
+                    Toast.makeText(this@editprofile, "Error creating profile: ${response.message()}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private suspend fun updateProfileOnServer(token: String, profileId: Int, profileData: Map<String, String>) {
+        val requestBodyMap = profileData.mapValues { (_, value) ->
+            value.toRequestBody("text/plain".toMediaTypeOrNull())
+        }
+
+        val imagePart = selectedImageFile?.let { file ->
+            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+            MultipartBody.Part.createFormData("image", file.name, requestFile)
+        }
+
+        val call = apiService.updateProfile(
+            "Bearer $token",
+            profileId,
+            requestBodyMap["username"]!!,
+            requestBodyMap["age"]!!,
+            requestBodyMap["gender"]!!,
+            requestBodyMap["date_of_birth"]!!,
+            requestBodyMap["notes"]!!,
+            imagePart
+        )
+
+        val response = call.execute()
         
-        // Show success message
-        Toast.makeText(this, "Profile saved successfully", Toast.LENGTH_SHORT).show()
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful && response.body() != null) {
+                val profileResponse = response.body()!!
+                
+                // Update local storage
+                Sessions.saveUserData(this@editprofile, profileData["username"]!!, Sessions.getUserEmail(this@editprofile) ?: "")
+                
+                saveChangesButton.isEnabled = true
+                saveChangesButton.text = "Save Changes"
+                Toast.makeText(this@editprofile, "Profile updated successfully", Toast.LENGTH_SHORT).show()
         finish()
+            } else {
+                saveChangesButton.isEnabled = true
+                saveChangesButton.text = "Save Changes"
+                Toast.makeText(this@editprofile, "Error updating profile: ${response.message()}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
     
     // Photo Selection Methods

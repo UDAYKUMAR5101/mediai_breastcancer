@@ -44,17 +44,22 @@
 
     </LinearLayout>
 
-    <ScrollView
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
+        android:layout_weight="1">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
 
             <!-- Profile Header Card -->
             <androidx.cardview.widget.CardView
@@ -104,6 +109,7 @@
 
                     <!-- Name -->
                     <TextView
+                        android:id="@+id/profileName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
@@ -115,6 +121,7 @@
 
                     <!-- Age -->
                     <TextView
+                        android:id="@+id/profileAge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
@@ -163,6 +170,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/profileCompletionPercentage"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/profile_complete_percent"
@@ -172,6 +180,7 @@
                 </LinearLayout>
 
                 <ProgressBar
+                    android:id="@+id/profileCompletionProgress"
                     style="@android:style/Widget.ProgressBar.Horizontal"
                     android:layout_width="match_parent"
                     android:layout_height="8dp"
@@ -181,6 +190,7 @@
                     android:progress="80" />
 
                 <TextView
+                    android:id="@+id/profileCompletionInstruction"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
@@ -421,6 +431,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-        </LinearLayout>
-    </ScrollView>
+            </LinearLayout>
+        </ScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>

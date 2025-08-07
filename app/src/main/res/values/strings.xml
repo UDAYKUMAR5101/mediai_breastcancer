@@ -97,4 +97,13 @@
     <string name="health_summary">Health Summary</string>
     <string name="last_updated">Last updated: May 15, 2023</string>
     <string name="summary_text">No concerning signs detected. Keep up with regular self-examinations.</string>
+    
+    <!-- Additional Profile Strings -->
+    <string name="profile_risk_moderate">Moderate Risk</string>
+    <string name="profile_risk_high">High Risk</string>
+    <string name="profile_completion_almost_there">Almost there! Complete your profile for better experience.</string>
+    <string name="profile_completion_good_progress">Good progress! Add more details to complete your profile.</string>
+    <string name="profile_completion_start">Complete your profile to get personalized health insights.</string>
+    <string name="profile_completion_complete">Profile complete! 🎉</string>
+    <string name="my_profile_title">My Profile</string>
 </resources>

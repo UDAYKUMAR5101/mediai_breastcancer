@@ -118,7 +118,7 @@
             
         <!-- Risk and Diagnosis Activities -->
         <activity
-            android:name=".risklevelpage"
+            android:name=".RiskLevelPage"
             android:exported="false" />
             
 
