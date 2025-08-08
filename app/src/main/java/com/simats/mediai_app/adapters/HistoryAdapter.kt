@@ -49,16 +49,38 @@ class HistoryAdapter(
             }
         }
 
-        // Format date
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-        val displayFormat = SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
-        
-        try {
-            val date = dateFormat.parse(historyItem.createdAt)
-            holder.dateText.text = date?.let { displayFormat.format(it) } ?: historyItem.createdAt
+        // Format date - handle multiple date formats
+        val displayDate = try {
+            val dateFormats = listOf(
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd"
+            )
+            
+            var parsedDate: java.util.Date? = null
+            for (format in dateFormats) {
+                try {
+                    val dateFormat = SimpleDateFormat(format, Locale.getDefault())
+                    parsedDate = dateFormat.parse(historyItem.createdAt)
+                    if (parsedDate != null) break
+                } catch (e: Exception) {
+                    continue
+                }
+            }
+            
+            if (parsedDate != null) {
+                val displayFormat = SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
+                displayFormat.format(parsedDate)
+            } else {
+                historyItem.createdAt
+            }
         } catch (e: Exception) {
-            holder.dateText.text = historyItem.createdAt
+            historyItem.createdAt
         }
+        
+        holder.dateText.text = displayDate
 
         // Set risk level and percentage
         holder.riskLevelText.text = historyItem.riskLevel

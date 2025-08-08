@@ -66,6 +66,8 @@ class UploadpageActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "UploadpageActivity"
+        private const val MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
+        private const val MIN_IMAGE_RESOLUTION = 1000 // Minimum width/height
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -228,7 +230,14 @@ class UploadpageActivity : AppCompatActivity() {
 
     private fun handleImageSelection(uri: Uri) {
         try {
-            // Load image without checking size or resolution
+            // Validate image size and resolution
+            val validationResult = validateImage(uri)
+            if (!validationResult.isValid) {
+                Toast.makeText(this, validationResult.errorMessage, Toast.LENGTH_LONG).show()
+                return
+            }
+
+            // Load and display image
             val bitmap = loadBitmapFromUri(uri)
             if (bitmap == null) {
                 Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show()
@@ -244,7 +253,58 @@ class UploadpageActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
             Log.e(TAG, "Error handling image selection", e)
-            Toast.makeText(this, "Error processing image: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error processing image: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun validateImage(uri: Uri): ImageValidationResult {
+        return try {
+            // Check file size first
+            val fileSize = getFileSize(uri)
+            if (fileSize > MAX_IMAGE_SIZE) {
+                return ImageValidationResult(false, "Image size exceeds 10MB limit")
+            }
+
+            // Check image resolution
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            
+            contentResolver.openInputStream(uri)?.use { stream ->
+                BitmapFactory.decodeStream(stream, null, options)
+            }
+            
+            val width = options.outWidth
+            val height = options.outHeight
+            
+            if (width < MIN_IMAGE_RESOLUTION || height < MIN_IMAGE_RESOLUTION) {
+                return ImageValidationResult(false, "Image resolution too low. Minimum required: 1000x1000px")
+            }
+            
+            ImageValidationResult(true, "")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error validating image", e)
+            ImageValidationResult(false, "Error validating image: ${e.message}")
+        }
+    }
+
+    private fun getFileSize(uri: Uri): Long {
+        return try {
+            when (uri.scheme) {
+                "file" -> {
+                    val file = File(uri.path!!)
+                    file.length()
+                }
+                "content" -> {
+                    contentResolver.openInputStream(uri)?.use { stream ->
+                        stream.available().toLong()
+                    } ?: 0L
+                }
+                else -> 0L
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting file size", e)
+            0L
         }
     }
 
@@ -351,10 +411,10 @@ class UploadpageActivity : AppCompatActivity() {
 
     private fun handleImagePredictionResponse(response: ImagePredictionResponse) {
         try {
-            // Save to history
+            // Save to history first
             saveToHistory(response)
             
-            // Navigate to Risk fragment host using MainActivity + pass args via intent
+            // Navigate to Risk fragment with the prediction results
             val intent = Intent(this, MainActivity::class.java).apply {
                 putExtra("navigate_to", "risk")
                 putExtra("risk_level", response.risk_level)
@@ -368,7 +428,7 @@ class UploadpageActivity : AppCompatActivity() {
             Toast.makeText(this, "Error displaying results: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
-
+    
     private fun saveToHistory(response: ImagePredictionResponse) {
         val token = Sessions.getAccessToken(this)
         if (token == null) {
@@ -461,4 +521,6 @@ class UploadpageActivity : AppCompatActivity() {
             .setNegativeButton("Cancel", null)
             .show()
     }
+
+    private data class ImageValidationResult(val isValid: Boolean, val errorMessage: String)
 }

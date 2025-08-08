@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModelProvider
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -54,10 +55,12 @@ class editprofile : AppCompatActivity() {
     private lateinit var saveChangesButton: Button
     private lateinit var profileImageView: ImageView
     private lateinit var changePhotoText: TextView
+    private lateinit var progressBar: View
     
     // Photo selection variables
     private var selectedImageFile: File? = null
     private var cameraImageUri: Uri? = null
+    private var currentProfileImageUrl: String? = null
     
     // Activity Result Launchers
     private lateinit var cameraPermissionLauncher: ActivityResultLauncher<String>
@@ -74,9 +77,19 @@ class editprofile : AppCompatActivity() {
     private var profileId: Int? = null
     private var profileExists = false
     
+    // Store original values for comparison
+    private var originalProfileData: ProfileData? = null
+    
+    // ViewModel
+    private lateinit var profileViewModel: ProfileViewModel
+    
     companion object {
         private const val TAG = "EditProfileActivity"
         private const val MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
+        
+        // Intent extras for data sharing
+        const val EXTRA_PROFILE_UPDATED = "profile_updated"
+        const val EXTRA_PROFILE_DATA = "profile_data"
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,6 +101,9 @@ class editprofile : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        
+        // Initialize ViewModel
+        profileViewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
         
         // Initialize all views
         initializeViews()
@@ -122,6 +138,9 @@ class editprofile : AppCompatActivity() {
         // Profile image views
         profileImageView = findViewById(R.id.profileImageView)
         changePhotoText = findViewById(R.id.changePhotoText)
+        
+        // Progress indicator
+        progressBar = findViewById(R.id.progressBar)
     }
     
     private fun setupDatePicker() {
@@ -179,7 +198,7 @@ class editprofile : AppCompatActivity() {
     
     private fun setupSaveButton() {
         saveChangesButton.setOnClickListener {
-                saveProfile()
+            saveProfile()
         }
     }
     
@@ -198,8 +217,7 @@ class editprofile : AppCompatActivity() {
         }
 
         // Show loading state
-        saveChangesButton.isEnabled = false
-        saveChangesButton.text = "Loading..."
+        setLoadingState(true)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -211,6 +229,7 @@ class editprofile : AppCompatActivity() {
                         val profile = profileResponse.body()!!
                         profileExists = true
                         profileId = 1 // Assuming the API returns profile with ID 1
+                        originalProfileData = profile.data
                         populateProfileData(profile.data)
                         Log.d(TAG, "Profile loaded successfully")
                     } else {
@@ -218,15 +237,13 @@ class editprofile : AppCompatActivity() {
                         loadLocalUserData()
                         Log.d(TAG, "Profile doesn't exist, using local data")
                     }
-                    saveChangesButton.isEnabled = true
-                    saveChangesButton.text = "Save Changes"
+                    setLoadingState(false)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading profile", e)
                 withContext(Dispatchers.Main) {
                     loadLocalUserData()
-                    saveChangesButton.isEnabled = true
-                    saveChangesButton.text = "Save Changes"
+                    setLoadingState(false)
                     Toast.makeText(this@editprofile, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -273,16 +290,21 @@ class editprofile : AppCompatActivity() {
         
         // Load profile image if available
         if (!profileData?.image.isNullOrEmpty()) {
-            loadProfileImage(profileData.image)
+            currentProfileImageUrl = profileData?.image
+            loadProfileImage(profileData?.image)
         }
     }
 
-    private fun loadProfileImage(imageUrl: String) {
-        Glide.with(this)
-            .load(imageUrl)
-            .placeholder(R.drawable.profile_photo)
-            .error(R.drawable.profile_photo)
-            .into(profileImageView)
+    private fun loadProfileImage(imageUrl: String?) {
+        if (!imageUrl.isNullOrEmpty()) {
+            Glide.with(this)
+                .load(imageUrl)
+                .placeholder(R.drawable.profile_photo)
+                .error(R.drawable.profile_photo)
+                .into(profileImageView)
+        } else {
+            profileImageView.setImageResource(R.drawable.profile_photo)
+        }
     }
     
     private fun validateInputs(): Boolean {
@@ -331,8 +353,7 @@ class editprofile : AppCompatActivity() {
         }
 
         // Show loading state
-        saveChangesButton.isEnabled = false
-        saveChangesButton.text = "Saving..."
+        setLoadingState(true)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -348,8 +369,7 @@ class editprofile : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error saving profile", e)
                 withContext(Dispatchers.Main) {
-                    saveChangesButton.isEnabled = true
-                    saveChangesButton.text = "Save Changes"
+                    setLoadingState(false)
                     Toast.makeText(this@editprofile, "Error saving profile: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
@@ -417,10 +437,26 @@ class editprofile : AppCompatActivity() {
                 // Update local storage
                 Sessions.saveUserData(this@editprofile, profileData["username"]!!, Sessions.getUserEmail(this@editprofile) ?: "")
                 
-                saveChangesButton.isEnabled = true
-                saveChangesButton.text = "Save Changes"
+                // Update current profile data
+                originalProfileData = ProfileData(
+                    username = profileData["username"],
+                    age = profileData["age"]?.toIntOrNull(),
+                    gender = profileData["gender"],
+                    date_of_birth = profileData["date_of_birth"],
+                    notes = profileData["notes"],
+                    image = profileResponse.data?.image
+                )
+                
+                // Update profile image if uploaded
+                if (selectedImageFile != null) {
+                    displayImage(loadBitmapFromFile(selectedImageFile!!))
+                }
+                
+                setLoadingState(false)
                 Toast.makeText(this@editprofile, "Profile created successfully", Toast.LENGTH_SHORT).show()
-                finish()
+                
+                // Share updated data with other activities
+                shareUpdatedProfileData()
             } else {
                 // Profile already exists, try PATCH
                 if (response.code() == 400 && response.errorBody()?.string()?.contains("Profile already exists") == true) {
@@ -429,8 +465,7 @@ class editprofile : AppCompatActivity() {
                     profileId = 1
                     updateProfileOnServer(token, 1, profileData)
                 } else {
-                    saveChangesButton.isEnabled = true
-                    saveChangesButton.text = "Save Changes"
+                    setLoadingState(false)
                     Toast.makeText(this@editprofile, "Error creating profile: ${response.message()}", Toast.LENGTH_LONG).show()
                 }
             }
@@ -467,15 +502,58 @@ class editprofile : AppCompatActivity() {
                 // Update local storage
                 Sessions.saveUserData(this@editprofile, profileData["username"]!!, Sessions.getUserEmail(this@editprofile) ?: "")
                 
-                saveChangesButton.isEnabled = true
-                saveChangesButton.text = "Save Changes"
+                // Update current profile data
+                originalProfileData = ProfileData(
+                    username = profileData["username"],
+                    age = profileData["age"]?.toIntOrNull(),
+                    gender = profileData["gender"],
+                    date_of_birth = profileData["date_of_birth"],
+                    notes = profileData["notes"],
+                    image = profileResponse.data?.image ?: originalProfileData?.image
+                )
+                
+                // Update profile image if uploaded
+                if (selectedImageFile != null) {
+                    displayImage(loadBitmapFromFile(selectedImageFile!!))
+                }
+                
+                setLoadingState(false)
                 Toast.makeText(this@editprofile, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-        finish()
+                
+                // Share updated data with other activities
+                shareUpdatedProfileData()
             } else {
-                saveChangesButton.isEnabled = true
-                saveChangesButton.text = "Save Changes"
+                setLoadingState(false)
                 Toast.makeText(this@editprofile, "Error updating profile: ${response.message()}", Toast.LENGTH_LONG).show()
             }
+        }
+    }
+    
+    private fun shareUpdatedProfileData() {
+        // Update ViewModel with new profile data
+        profileViewModel.updateProfile(originalProfileData)
+        
+        // Create intent with updated profile data
+        val intent = Intent().apply {
+            putExtra(EXTRA_PROFILE_UPDATED, true)
+            putExtra(EXTRA_PROFILE_DATA, originalProfileData)
+        }
+        
+        // Set result for any activity that started this one
+        setResult(RESULT_OK, intent)
+        
+        // Broadcast to other activities that might be interested
+        sendBroadcast(intent)
+    }
+    
+    private fun setLoadingState(loading: Boolean) {
+        saveChangesButton.isEnabled = !loading
+        progressBar.visibility = if (loading) View.VISIBLE else View.GONE
+        
+        if (loading) {
+            saveChangesButton.text = "Saving..."
+        } else {
+            saveChangesButton.text = "Save Changes"
         }
     }
     
@@ -673,6 +751,26 @@ class editprofile : AppCompatActivity() {
         }
     }
     
+    private fun loadBitmapFromFile(file: File): Bitmap? {
+        return try {
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeFile(file.absolutePath, options)
+            
+            // Calculate sample size for memory optimization
+            val sampleSize = calculateInSampleSize(options, 800, 800)
+            
+            val finalOptions = BitmapFactory.Options().apply {
+                inSampleSize = sampleSize
+            }
+            BitmapFactory.decodeFile(file.absolutePath, finalOptions)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading bitmap from file", e)
+            null
+        }
+    }
+    
     private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
         val height = options.outHeight
         val width = options.outWidth
@@ -689,13 +787,15 @@ class editprofile : AppCompatActivity() {
         return inSampleSize
     }
     
-    private fun displayImage(bitmap: Bitmap) {
-        profileImageView.apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            setImageBitmap(bitmap)
-            // Remove the tint when showing actual photo
-            imageTintList = null
-            background = null
+    private fun displayImage(bitmap: Bitmap?) {
+        if (bitmap != null) {
+            profileImageView.apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                setImageBitmap(bitmap)
+                // Remove the tint when showing actual photo
+                imageTintList = null
+                background = null
+            }
         }
     }
     
@@ -725,13 +825,5 @@ class editprofile : AppCompatActivity() {
             .setPositiveButton("Grant Permission") { _, _ -> onPositive() }
             .setNegativeButton("Cancel", null)
             .show()
-    }
-    
-    // Optional: Convert image to MultipartBody.Part for future upload
-    fun createImageMultipart(): MultipartBody.Part? {
-        return selectedImageFile?.let { file ->
-            val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
-            MultipartBody.Part.createFormData("profile_image", file.name, requestBody)
-        }
     }
 }

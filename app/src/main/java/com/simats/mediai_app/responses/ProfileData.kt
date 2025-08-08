@@ -1,7 +1,10 @@
 package com.simats.mediai_app.responses
 
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class ProfileData(
     @SerializedName("username")
     val username: String?,
@@ -20,4 +23,4 @@ data class ProfileData(
     
     @SerializedName("image")
     val image: String?
-)
+) : Parcelable

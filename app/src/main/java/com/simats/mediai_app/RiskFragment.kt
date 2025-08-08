@@ -131,82 +131,11 @@ class RiskFragment : Fragment() {
     }
 
     private fun saveRiskResult() {
-        // Get current risk data
-        val riskLevel = arguments?.getString("risk_level") ?: 
-                       activity?.intent?.getStringExtra("risk_level") ?: "low"
-        val predictionPercentage = arguments?.getDouble("prediction_percentage", 15.0) ?: 
-                                 activity?.intent?.getDoubleExtra("prediction_percentage", 15.0) ?: 15.0
-        val mode = arguments?.getString("mode") ?: 
-                  activity?.intent?.getStringExtra("mode") ?: "symptoms"
+        // Since the backend auto-saves predictions, we just show a confirmation
+        Toast.makeText(context, "Risk assessment has been automatically saved to your history!", Toast.LENGTH_LONG).show()
         
-        // Get current timestamp
-        val currentTime = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault())
-            .format(java.util.Date())
-        
-        // Check authentication
-        val token = Sessions.getAccessToken(requireContext())
-        if (token == null) {
-            Toast.makeText(context, "Authentication required. Please login again.", Toast.LENGTH_LONG).show()
-            navigateToLogin()
-            return
-        }
-        
-        // Create history request
-        val historyRequest = SaveHistoryRequest(
-            riskLevel = riskLevel,
-            predictionPercentage = predictionPercentage.toFloat(),
-            mode = mode,
-            createdAt = currentTime
-        )
-        
-        // Show loading state
-        view?.findViewById<MaterialButton>(R.id.btnSaveResult)?.apply {
-            isEnabled = false
-            text = "Saving..."
-        }
-        
-        // Save to history via API
-        apiService.saveHistory("Bearer $token", historyRequest).enqueue(object : Callback<SaveHistoryResponse> {
-            override fun onResponse(call: Call<SaveHistoryResponse>, response: Response<SaveHistoryResponse>) {
-                view?.findViewById<MaterialButton>(R.id.btnSaveResult)?.apply {
-                    isEnabled = true
-                    text = "Save Result"
-                }
-                
-                if (response.isSuccessful) {
-                    Toast.makeText(context, "Risk assessment saved to history successfully!", Toast.LENGTH_LONG).show()
-                    Log.d(TAG, "History saved successfully")
-                } else {
-                    val errorMessage = when (response.code()) {
-                        401 -> "Authentication failed. Please login again."
-                        403 -> "Access denied. Please check your permissions."
-                        500 -> "Server error. Please try again later."
-                        else -> "Failed to save history: ${response.code()}"
-                    }
-                    Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
-                    Log.w(TAG, "Failed to save history: ${response.code()}")
-                    
-                    if (response.code() == 401) {
-                        navigateToLogin()
-                    }
-                }
-            }
-            
-            override fun onFailure(call: Call<SaveHistoryResponse>, t: Throwable) {
-                view?.findViewById<MaterialButton>(R.id.btnSaveResult)?.apply {
-                    isEnabled = true
-                    text = "Save Result"
-                }
-                
-                val errorMessage = when {
-                    t.message?.contains("timeout", ignoreCase = true) == true -> "Request timeout. Please try again."
-                    t.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your connection."
-                    else -> "Error saving history: ${t.message}"
-                }
-                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
-                Log.e(TAG, "Error saving history", t)
-            }
-        })
+        // Optionally, we can still show a success message or navigate to history
+        Log.d(TAG, "Risk assessment auto-saved by backend")
     }
 
     private fun navigateToDashboard() {
