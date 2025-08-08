@@ -1,4 +1,4 @@
-# MEDIAI APP - Fragment-Based Navigation
+  # MEDIAI APP - Fragment-Based Navigation
 
 A modern Android app with fragment-based navigation using Android Jetpack Navigation Component.
 

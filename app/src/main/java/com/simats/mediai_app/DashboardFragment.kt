@@ -14,7 +14,6 @@ import androidx.cardview.widget.CardView
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
-import android.widget.View
 import kotlin.random.Random
 
 class DashboardFragment : Fragment() {
@@ -70,9 +69,9 @@ class DashboardFragment : Fragment() {
         }
 
         // Risk Level Card - Navigate to Risk Fragment
-        view?.findViewById<CardView>(R.id.riskLevelCard)?.setOnClickListener {
-            findNavController().navigate(R.id.nav_risk)
-        }
+//        view?.findViewById<CardView>(R.id.riskLevelCard)?.setOnClickListener {
+//            findNavController().navigate(R.id.nav_risk)
+//        }
 
         // Upload Image Card - Navigate to Upload Activity
         view?.findViewById<CardView>(R.id.uploadImageCard)?.setOnClickListener {

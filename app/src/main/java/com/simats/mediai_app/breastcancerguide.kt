@@ -20,11 +20,16 @@ class breastcancerguide : AppCompatActivity() {
             insets
         }
 
-        // TODO: Replace with actual IDs from your layout if different
+        // Back button returns to previous screen
+        findViewById<View>(R.id.backButton)?.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+
+        // Section navigation
         val typesSection = findViewById<LinearLayout>(R.id.typesSection)
         val cancerStagesSection = findViewById<LinearLayout>(R.id.cancerStagesSection)
         val treatmentSection = findViewById<LinearLayout>(R.id.treatmentSection)
-        val preventionSection = findViewById<LinearLayout>(R.id.tipscard) // TODO: Set correct ID if different
+        val preventionSection = findViewById<LinearLayout>(R.id.tipscard)
 
         typesSection?.setOnClickListener {
             val intent = Intent(this, stagesofcancer::class.java)

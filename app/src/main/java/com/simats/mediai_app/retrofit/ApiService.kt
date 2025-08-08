@@ -36,6 +36,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Part
+import retrofit2.http.Multipart
 
 interface ApiService {
     @POST("api/register/")
@@ -67,19 +68,28 @@ interface ApiService {
              @Body deleteAccountRequest: DeleteAccountRequest
             ): Call<DeleteAccountResponse>
 
-    @POST("api/chatbot/")
+    @POST("api/api/chatbot_udaykumar/")
     fun chatbot(@Header("Authorization") token: String, @Body chatbotRequest: ChatRequest): Call<ChatResponse>
 
+    @Multipart
     @POST("api/upload-image/")
     fun uploadImage(@Part image: MultipartBody.Part): Call<UploadResponse>
 
-    @POST("api/predict-symptoms/")
-    fun predictSymptoms(@Body symptomsRequest: SymptomsRequest): Call<SymptomsResponse>
+    @POST("api/predict/")
+    fun predictSymptoms(
+        @Header("Authorization") token: String,
+        @Body symptomsRequest: SymptomsRequest
+    ): Call<SymptomsResponse>
 
+    @Multipart
     @POST("api/api/gemini-risk/")
-    fun predictImageRisk(@Part image: MultipartBody.Part): Call<ImagePredictionResponse>
+    fun predictImageRisk(
+        @Header("Authorization") token: String,
+        @Part image: MultipartBody.Part
+    ): Call<ImagePredictionResponse>
 
     // Profile API endpoints
+    @Multipart
     @POST("api/api/profile/")
     fun createProfile(
         @Header("Authorization") token: String,
@@ -91,6 +101,7 @@ interface ApiService {
         @Part image: MultipartBody.Part?
     ): Call<ProfileResponse>
 
+    @Multipart
     @PATCH("api/api/profile/{id}/")
     fun updateProfile(
         @Header("Authorization") token: String,

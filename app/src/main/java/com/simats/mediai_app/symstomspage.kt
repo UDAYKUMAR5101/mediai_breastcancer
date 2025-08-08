@@ -8,16 +8,26 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.simats.mediai_app.retrofit.retrofit2
+import com.simats.mediai_app.retrofit.RetrofitClient
 import com.simats.mediai_app.responses.SymptomsRequest
 import com.simats.mediai_app.responses.SymptomsResponse
+import com.simats.mediai_app.responses.SaveHistoryRequest
+import com.simats.mediai_app.responses.SaveHistoryResponse
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import android.util.Log
 
 
 class symstomspage : AppCompatActivity() {
+    
+    companion object {
+        private const val TAG = "symstomspage"
+    }
+    
+    // API Service
+    private lateinit var apiService: com.simats.mediai_app.retrofit.ApiService
     
     // UI Elements
     private lateinit var backButton: ImageButton
@@ -32,10 +42,13 @@ class symstomspage : AppCompatActivity() {
     private lateinit var breastfedNoButton: Button
     private lateinit var alcoholYesButton: Button
     private lateinit var alcoholNoButton: Button
+    private lateinit var hormonalTreatmentYesButton: Button
+    private lateinit var hormonalTreatmentNoButton: Button
     private lateinit var activityLowButton: Button
     private lateinit var activityModerateButton: Button
     private lateinit var activityHighButton: Button
-    private lateinit var breastPainToggle: ToggleButton
+    private lateinit var breastPainYesButton: Button
+    private lateinit var breastPainNoButton: Button
     private lateinit var breastCancerYesButton: Button
     private lateinit var breastCancerNoButton: Button
     private lateinit var additionalNotesEditText: EditText
@@ -47,13 +60,17 @@ class symstomspage : AppCompatActivity() {
     private var familyHistory: String = "no"
     private var breastfed: String = "no"
     private var alcoholConsumption: String = "no"
+    private var hormonalTreatmentHistory: String = "no"
     private var activityLevel: String = "low"
-    private var breastPain: Boolean = false
+    private var breastPain: String = "no"
     private var breastCancerHistory: String = "no"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_symstomspage)
+        
+        // Initialize API Service
+        apiService = RetrofitClient.getClient().create(com.simats.mediai_app.retrofit.ApiService::class.java)
         
         initializeViews()
         setupClickListeners()
@@ -74,10 +91,13 @@ class symstomspage : AppCompatActivity() {
             breastfedNoButton = findViewById(R.id.breastfedNoButton)
             alcoholYesButton = findViewById(R.id.alcoholYesButton)
             alcoholNoButton = findViewById(R.id.alcoholNoButton)
+            hormonalTreatmentYesButton = findViewById(R.id.hormonalTreatmentYesButton)
+            hormonalTreatmentNoButton = findViewById(R.id.hormonalTreatmentNoButton)
             activityLowButton = findViewById(R.id.activityLowButton)
             activityModerateButton = findViewById(R.id.activityModerateButton)
             activityHighButton = findViewById(R.id.activityHighButton)
-            breastPainToggle = findViewById(R.id.breastPainToggle)
+            breastPainYesButton = findViewById(R.id.breastPainYesButton)
+            breastPainNoButton = findViewById(R.id.breastPainNoButton)
             breastCancerYesButton = findViewById(R.id.breastCancerYesButton)
             breastCancerNoButton = findViewById(R.id.breastCancerNoButton)
             additionalNotesEditText = findViewById(R.id.additionalNotesEditText)
@@ -126,6 +146,14 @@ class symstomspage : AppCompatActivity() {
             setAlcoholConsumption("no")
         }
 
+        // Hormonal treatment history buttons
+        hormonalTreatmentYesButton.setOnClickListener {
+            setHormonalTreatmentHistory("yes")
+        }
+        hormonalTreatmentNoButton.setOnClickListener {
+            setHormonalTreatmentHistory("no")
+        }
+
         // Activity level buttons
         activityLowButton.setOnClickListener {
             setActivityLevel("low")
@@ -137,9 +165,12 @@ class symstomspage : AppCompatActivity() {
             setActivityLevel("high")
         }
 
-        // Breast pain toggle
-        breastPainToggle.setOnCheckedChangeListener { _, isChecked ->
-            breastPain = isChecked
+        // Breast pain buttons
+        breastPainYesButton.setOnClickListener {
+            setBreastPain("yes")
+        }
+        breastPainNoButton.setOnClickListener {
+            setBreastPain("no")
         }
 
         // Breast cancer history buttons
@@ -230,6 +261,21 @@ class symstomspage : AppCompatActivity() {
         }
     }
 
+    private fun setHormonalTreatmentHistory(history: String) {
+        hormonalTreatmentHistory = history
+        if (history == "yes") {
+            hormonalTreatmentYesButton.setBackgroundResource(R.drawable.toggle_button_active)
+            hormonalTreatmentYesButton.setTextColor(ContextCompat.getColor(this, android.R.color.white))
+            hormonalTreatmentNoButton.setBackgroundResource(R.drawable.toggle_button_inactive)
+            hormonalTreatmentNoButton.setTextColor(ContextCompat.getColor(this, R.color.settings_secondary_text))
+        } else {
+            hormonalTreatmentNoButton.setBackgroundResource(R.drawable.toggle_button_active)
+            hormonalTreatmentNoButton.setTextColor(ContextCompat.getColor(this, android.R.color.white))
+            hormonalTreatmentYesButton.setBackgroundResource(R.drawable.toggle_button_inactive)
+            hormonalTreatmentYesButton.setTextColor(ContextCompat.getColor(this, R.color.settings_secondary_text))
+        }
+    }
+
     private fun setActivityLevel(level: String) {
         activityLevel = level
         // Reset all buttons to inactive
@@ -254,6 +300,21 @@ class symstomspage : AppCompatActivity() {
                 activityHighButton.setBackgroundResource(R.drawable.toggle_button_active)
                 activityHighButton.setTextColor(ContextCompat.getColor(this, android.R.color.white))
             }
+        }
+    }
+
+    private fun setBreastPain(pain: String) {
+        breastPain = pain
+        if (pain == "yes") {
+            breastPainYesButton.setBackgroundResource(R.drawable.toggle_button_active)
+            breastPainYesButton.setTextColor(ContextCompat.getColor(this, android.R.color.white))
+            breastPainNoButton.setBackgroundResource(R.drawable.toggle_button_inactive)
+            breastPainNoButton.setTextColor(ContextCompat.getColor(this, R.color.settings_secondary_text))
+        } else {
+            breastPainNoButton.setBackgroundResource(R.drawable.toggle_button_active)
+            breastPainNoButton.setTextColor(ContextCompat.getColor(this, android.R.color.white))
+            breastPainYesButton.setBackgroundResource(R.drawable.toggle_button_inactive)
+            breastPainYesButton.setTextColor(ContextCompat.getColor(this, R.color.settings_secondary_text))
         }
     }
 
@@ -289,9 +350,12 @@ class symstomspage : AppCompatActivity() {
                 }
             }
 
-            // Validate BMI
+            // Validate BMI (required)
             val bmiText = bmiEditText.text?.toString() ?: ""
-            if (bmiText.isNotEmpty()) {
+            if (bmiText.isEmpty()) {
+                bmiEditText.error = "BMI is required"
+                isValid = false
+            } else {
                 val bmi = bmiText.toFloatOrNull()
                 if (bmi == null || bmi < 10 || bmi > 60) {
                     bmiEditText.error = "BMI must be between 10-60"
@@ -299,9 +363,12 @@ class symstomspage : AppCompatActivity() {
                 }
             }
 
-            // Validate menarche age
+            // Validate menarche age (required)
             val menarcheText = menarcheEditText.text?.toString() ?: ""
-            if (menarcheText.isNotEmpty()) {
+            if (menarcheText.isEmpty()) {
+                menarcheEditText.error = "Age at first menstruation is required"
+                isValid = false
+            } else {
                 val menarcheAge = menarcheText.toIntOrNull()
                 if (menarcheAge == null || menarcheAge < 8 || menarcheAge > 20) {
                     menarcheEditText.error = "Age at first menstruation must be between 8-20 years"
@@ -317,33 +384,42 @@ class symstomspage : AppCompatActivity() {
     }
 
     private fun submitSymptomsData() {
+        // Check authentication
+        val token = Sessions.getAccessToken(this)
+        if (token == null) {
+            Toast.makeText(this, "Authentication required. Please login again.", Toast.LENGTH_LONG).show()
+            navigateToLogin()
+            return
+        }
+        
         // Show loading state
         submitButton.isEnabled = false
         submitButton.text = "Submitting..."
         
         // Collect form data
         val age = ageEditText.text.toString().toIntOrNull() ?: 0
-        val bmi = bmiEditText.text.toString().toFloatOrNull()
+        val bmiText = bmiEditText.text.toString().trim()
+        val bmi: String? = if (bmiText.isEmpty()) null else bmiText
         val menarcheAge = menarcheEditText.text.toString().toIntOrNull()
+        val backendMenopausalStatus = if (menopausalStatus.contains("post", ignoreCase = true)) "post" else "pre"
         
         // Create request object
         val symptomsRequest = SymptomsRequest(
             age = age,
-            menopausal_status = menopausalStatus,
+            menopausal_status = backendMenopausalStatus,
             family_history = familyHistory,
             bmi = bmi,
             menarche_age = menarcheAge,
             breastfeeding_history = breastfed,
             alcohol_consumption = alcoholConsumption,
-            hormonal_treatment_history = "no", // Default value, can be added to UI later
+            hormonal_treatment_history = hormonalTreatmentHistory,
             physical_activity = activityLevel,
             breast_pain = breastPain,
             breast_cancer = breastCancerHistory
         )
         
-        // Make API call
-        val apiService = retrofit2.getService(this)
-        val call = apiService.predictSymptoms(symptomsRequest)
+        // Make API call with authentication
+        val call = apiService.predictSymptoms("Bearer $token", symptomsRequest)
         
         call.enqueue(object : Callback<SymptomsResponse> {
             override fun onResponse(call: Call<SymptomsResponse>, response: Response<SymptomsResponse>) {
@@ -353,6 +429,9 @@ class symstomspage : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val symptomsResponse = response.body()
                     if (symptomsResponse != null) {
+                        // Save to history
+                        saveToHistory(symptomsResponse)
+                        
                         // Navigate to risk level page with results
                         navigateToRiskLevelPage(symptomsResponse)
                     } else {
@@ -360,13 +439,8 @@ class symstomspage : AppCompatActivity() {
                     }
                 } else {
                     // Handle error response
-                    val errorMessage = when (response.code()) {
-                        400 -> "Invalid request data"
-                        401 -> "Unauthorized access"
-                        500 -> "Server error"
-                        else -> "Network error: ${response.code()}"
-                    }
-                    Toast.makeText(this@symstomspage, errorMessage, Toast.LENGTH_LONG).show()
+                    val errorBody = try { response.errorBody()?.string() } catch (e: Exception) { null }
+                    handleSymptomsError(response.code(), errorBody)
                 }
             }
             
@@ -374,23 +448,100 @@ class symstomspage : AppCompatActivity() {
                 submitButton.isEnabled = true
                 submitButton.text = "Submit & Analyze Risk"
                 
-                val errorMessage = when {
-                    t.message?.contains("timeout", ignoreCase = true) == true -> "Request timeout. Please try again."
-                    t.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your connection."
-                    else -> "Error: ${t.message}"
-                }
-                Toast.makeText(this@symstomspage, errorMessage, Toast.LENGTH_LONG).show()
+                handleSymptomsFailure(t)
             }
         })
     }
     
     private fun navigateToRiskLevelPage(symptomsResponse: SymptomsResponse) {
-        val intent = Intent(this, RiskLevelPage::class.java).apply {
-            putExtra("risk_level", symptomsResponse.risk_level)
-            putExtra("prediction_percentage", symptomsResponse.prediction_percentage)
-            putExtra("mode", symptomsResponse.mode)
+        try {
+            // Navigate to Risk fragment host using MainActivity + pass args via intent
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("navigate_to", "risk")
+                putExtra("risk_level", symptomsResponse.risk_level)
+                putExtra("prediction_percentage", symptomsResponse.prediction_percentage)
+                putExtra("mode", symptomsResponse.mode)
+            }
+            startActivity(intent)
+            finish()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error navigating to risk level page", e)
+            Toast.makeText(this, "Error displaying results: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    private fun saveToHistory(response: SymptomsResponse) {
+        val token = Sessions.getAccessToken(this)
+        if (token == null) {
+            Log.w(TAG, "No access token available for saving history")
+            return
+        }
+
+        val historyRequest = SaveHistoryRequest(
+            riskLevel = response.risk_level,
+            predictionPercentage = response.prediction_percentage.toFloat(),
+            mode = response.mode,
+            createdAt = response.created_at
+        )
+
+        apiService.saveHistory("Bearer $token", historyRequest).enqueue(object : Callback<SaveHistoryResponse> {
+            override fun onResponse(call: Call<SaveHistoryResponse>, response: Response<SaveHistoryResponse>) {
+                if (response.isSuccessful) {
+                    Log.d(TAG, "History saved successfully")
+                } else {
+                    Log.w(TAG, "Failed to save history: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<SaveHistoryResponse>, t: Throwable) {
+                Log.e(TAG, "Error saving history", t)
+            }
+        })
+    }
+    
+    private fun handleSymptomsError(errorCode: Int, serverMessage: String?) {
+        val errorMessage = when (errorCode) {
+            400 -> "Invalid request data. Please check your inputs."
+            401 -> "Authentication failed. Please login again."
+            403 -> "Access denied. Please check your permissions."
+            500 -> "Server error. Please try again later."
+            else -> "Network error: $errorCode"
+        }
+        
+        val combinedMessage = if (!serverMessage.isNullOrBlank()) "$errorMessage\n$serverMessage" else errorMessage
+        Toast.makeText(this, combinedMessage, Toast.LENGTH_LONG).show()
+        if (!serverMessage.isNullOrBlank()) {
+            Log.w(TAG, "Server error body: $serverMessage")
+        }
+        
+        // Handle authentication errors
+        if (errorCode == 401) {
+            navigateToLogin()
+        }
+    }
+    
+    private fun handleSymptomsFailure(t: Throwable) {
+        val errorMessage = when {
+            t.message?.contains("timeout", ignoreCase = true) == true -> "Request timeout. Please try again."
+            t.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your connection."
+            t.message?.contains("authentication", ignoreCase = true) == true -> "Session expired. Please login again."
+            else -> "Error: ${t.message}"
+        }
+        
+        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+        
+        // Handle authentication failures
+        if (t.message?.contains("authentication", ignoreCase = true) == true) {
+            navigateToLogin()
+        }
+    }
+    
+    private fun navigateToLogin() {
+        Sessions.clearAuthTokens(this)
+        val intent = Intent(this, LoginPageActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         startActivity(intent)
-        finish() // Close the symptoms page
+        finish()
     }
 }

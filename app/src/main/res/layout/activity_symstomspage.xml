@@ -380,6 +380,55 @@
                 android:textColor="#808080"
                 android:layout_marginBottom="20dp" />
 
+            <!-- Hormonal Treatment History -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hormonal Treatment History"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="20dp">
+
+                <Button
+                    android:id="@+id/hormonalTreatmentYesButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="Yes"
+                    android:textSize="14sp"
+                    android:textColor="#666666"
+                    android:background="@drawable/toggle_button_inactive"
+                    android:layout_marginEnd="8dp"
+                    android:stateListAnimator="@null" />
+
+                <Button
+                    android:id="@+id/hormonalTreatmentNoButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="No"
+                    android:textSize="14sp"
+                    android:textColor="@color/white"
+                    android:background="@drawable/toggle_button_active"
+                    android:layout_marginStart="8dp"
+                    android:stateListAnimator="@null" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Including HRT, birth control, or other hormonal medications"
+                android:textSize="12sp"
+                android:textColor="#808080"
+                android:layout_marginBottom="20dp" />
+
             <!-- Physical Activity Level -->
             <TextView
                 android:layout_width="wrap_content"
@@ -445,40 +494,52 @@
                 android:layout_marginBottom="16dp" />
 
             <!-- Recent Breast Pain -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Recent Breast Pain"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Experienced in past 3 months"
+                android:textSize="12sp"
+                android:textColor="#808080"
+                android:layout_marginBottom="8dp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="20dp">
 
-                <LinearLayout
+                <Button
+                    android:id="@+id/breastPainYesButton"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:text="Yes"
+                    android:textSize="14sp"
+                    android:textColor="#666666"
+                    android:background="@drawable/toggle_button_inactive"
+                    android:layout_marginEnd="8dp"
+                    android:stateListAnimator="@null" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Recent Breast Pain"
-                        android:textSize="16sp"
-                        android:textColor="@color/black" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Experienced in past 3 months"
-                        android:textSize="12sp"
-                        android:textColor="#808080" />
-                </LinearLayout>
-                <ToggleButton
-                    android:id="@+id/breastPainToggle"
-                    android:layout_width="60dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/toggle_switch_background"
-                    android:textOff=""
-                    android:textOn=""
-                    android:checked="false" />
+                <Button
+                    android:id="@+id/breastPainNoButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="No"
+                    android:textSize="14sp"
+                    android:textColor="@color/white"
+                    android:background="@drawable/toggle_button_active"
+                    android:layout_marginStart="8dp"
+                    android:stateListAnimator="@null" />
+
             </LinearLayout>
 
             <!-- Breast Cancer History -->

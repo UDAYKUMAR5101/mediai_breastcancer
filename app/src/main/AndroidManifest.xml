@@ -107,6 +107,20 @@
         <activity
             android:name=".healthguide"
             android:exported="false" />
+        
+        <!-- Breast Cancer Guide and related pages -->
+        <activity
+            android:name=".breastcancerguide"
+            android:exported="false" />
+        <activity
+            android:name=".cancerstages"
+            android:exported="false" />
+        <activity
+            android:name=".stagesofcancer"
+            android:exported="false" />
+        <activity
+            android:name=".healthlifesytle"
+            android:exported="false" />
             
         <activity
             android:name=".historypage"

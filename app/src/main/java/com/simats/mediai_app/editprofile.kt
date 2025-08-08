@@ -40,8 +40,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.simats.mediai_app.retrofit.ApiService
 import com.simats.mediai_app.retrofit.RetrofitClient
-import com.simats.mediai_app.responses.ProfileResponse
 import com.bumptech.glide.Glide
+import com.simats.mediai_app.responses.ProfileData
 
 class editprofile : AppCompatActivity() {
     private lateinit var dateOfBirthEditText: EditText
@@ -250,17 +250,17 @@ class editprofile : AppCompatActivity() {
         }
     }
 
-    private fun populateProfileData(profileData: com.simats.mediai_app.responses.ProfileData) {
+    private fun populateProfileData(profileData: ProfileData?) {
         // Populate form fields with profile data
-        fullNameEditText.setText(profileData.username)
-        fullNameCounter.text = "${profileData.username.length}/50"
+        fullNameEditText.setText(profileData?.username)
+        fullNameCounter.text = "${profileData?.username?.length}/50"
         
-        ageEditText.setText(profileData.age.toString())
-        genderEditText.setText(profileData.gender)
+        ageEditText.setText(profileData?.age.toString())
+        genderEditText.setText(profileData?.gender)
         
         // Convert API date format (yyyy-MM-dd) to display format (dd/MM/yyyy)
         try {
-            val apiDate = apiDateFormatter.parse(profileData.date_of_birth)
+            val apiDate = apiDateFormatter.parse(profileData?.date_of_birth)
             if (apiDate != null) {
                 dateOfBirthEditText.setText(dateFormatter.format(apiDate))
             }
@@ -268,11 +268,11 @@ class editprofile : AppCompatActivity() {
             Log.e(TAG, "Error parsing date", e)
         }
         
-        medicalNotesEditText.setText(profileData.notes)
-        medicalNotesCounter.text = "${profileData.notes.length}/300"
+        medicalNotesEditText.setText(profileData?.notes)
+        medicalNotesCounter.text = "${profileData?.notes?.length}/300"
         
         // Load profile image if available
-        if (!profileData.image.isNullOrEmpty()) {
+        if (!profileData?.image.isNullOrEmpty()) {
             loadProfileImage(profileData.image)
         }
     }

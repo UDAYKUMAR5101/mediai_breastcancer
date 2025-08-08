@@ -23,9 +23,23 @@
             android:layout_marginTop="22dp"
             android:gravity="center_vertical">
 
+            <!-- Back Button -->
+            <ImageButton
+                android:id="@+id/backButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/back_side_arrow"
+                android:contentDescription="Back to Dashboard"
+                android:scaleType="centerInside"
+                android:padding="12dp"
+                android:layout_marginEnd="16dp"/>
+
+            <!-- Title -->
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Risk Assessment Result"
                 android:textStyle="bold"
                 android:textSize="18sp"

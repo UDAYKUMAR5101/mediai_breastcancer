@@ -7,6 +7,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.view.View
 import android.content.Intent
+import android.widget.TextView
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class todolist : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,5 +28,10 @@ class todolist : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+
+        // Set today's date in the header
+        val dateTextView = findViewById<TextView>(R.id.dateTextView)
+        val dateFormat = SimpleDateFormat("EEEE, MMMM d", Locale.getDefault())
+        dateTextView?.text = dateFormat.format(Date())
     }
 }

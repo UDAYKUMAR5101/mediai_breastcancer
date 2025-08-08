@@ -83,7 +83,6 @@
     <string name="cancel">Cancel</string>
     <string name="logout_confirm">Logout</string>
     <!-- My Profile Screen Strings -->
-    <string name="my_profile_title">My Profile</string>
     <string name="profile_name">Sarah Johnson</string>
     <string name="profile_age">34 years</string>
     <string name="profile_risk_low">Low Risk</string>
