@@ -105,6 +105,7 @@
                     app:tint="#888888" />
 
                 <TextView
+                    android:id="@+id/submittedDateText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Submitted on April 15, 2024"
@@ -115,6 +116,7 @@
 
             <!-- Risk Status Tag -->
             <TextView
+                android:id="@+id/riskStatusText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Low Risk"
@@ -145,6 +147,7 @@
                     android:layout_marginBottom="6dp" />
 
                 <TextView
+                    android:id="@+id/doctorNotesContentText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Patient presents with mild symptoms consistent with viral upper respiratory infection. Recommended rest and over-the-counter analgesics. Follow-up if symptoms persist beyond 7 days or worsen significantly."

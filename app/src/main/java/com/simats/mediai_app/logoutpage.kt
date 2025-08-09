@@ -27,8 +27,13 @@ class logoutpage : AppCompatActivity() {
         }
         logoutButton = findViewById(R.id.logoutButton)
         logoutButton.setOnClickListener {
+            // Clear locally stored session and profile
+            Sessions.clearLocalProfile(this)
+            Sessions.clearAuthTokens(this)
             val intent = Intent(this , LoginPageActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
+            finish()
         }
     }
 } 

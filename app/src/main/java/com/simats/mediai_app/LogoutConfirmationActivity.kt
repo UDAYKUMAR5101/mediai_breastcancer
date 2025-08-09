@@ -38,12 +38,9 @@ class LogoutConfirmationActivity : AppCompatActivity() {
     }
 
     private fun performLogout() {
-        // TODO: Implement actual logout logic
-        // Clear user session, preferences, etc.
-        // Example logout implementation:
-        // clearUserSession()
-        // clearUserPreferences()
-        // clearStoredData()
+        // Clear user session and locally stored profile
+        Sessions.clearLocalProfile(this)
+        Sessions.clearAuthTokens(this)
         // Navigate to login screen
         val intent = Intent(this, LoginPageActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

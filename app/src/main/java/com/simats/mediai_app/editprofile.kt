@@ -72,9 +72,10 @@ class editprofile : AppCompatActivity() {
     private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     private val apiDateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     
-    // API Service
+    // Local image path for persistence
+    private var currentLocalImagePath: String? = null
+    // API Service (kept for type references, but not used in local-only mode)
     private lateinit var apiService: ApiService
-    private var profileId: Int? = null
     private var profileExists = false
     
     // Store original values for comparison
@@ -90,6 +91,7 @@ class editprofile : AppCompatActivity() {
         // Intent extras for data sharing
         const val EXTRA_PROFILE_UPDATED = "profile_updated"
         const val EXTRA_PROFILE_DATA = "profile_data"
+         const val ACTION_PROFILE_UPDATED = "com.simats.mediai_app.ACTION_PROFILE_UPDATED"
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,11 +120,11 @@ class editprofile : AppCompatActivity() {
         setupSaveButton()
         setupBackButton()
         
-        // Initialize API Service
+        // Initialize API Service (not used for local-only storage)
         apiService = RetrofitClient.getClient().create(ApiService::class.java)
-        
-        // Load profile data
-        loadProfileData()
+
+        // Load profile data locally (no API)
+        loadLocalProfileData()
     }
     
     private fun initializeViews() {
@@ -144,9 +146,9 @@ class editprofile : AppCompatActivity() {
     }
     
     private fun setupDatePicker() {
-        // Set maximum date to 80 years ago
-        val maxDate = Calendar.getInstance()
-        maxDate.add(Calendar.YEAR, -80)
+        // Allow DOB between 80 years ago and 18 years ago
+        val maxDate = Calendar.getInstance().apply { add(Calendar.YEAR, -18) }
+        val minDate = Calendar.getInstance().apply { add(Calendar.YEAR, -80) }
         
         dateOfBirthEditText.setOnClickListener {
             val datePickerDialog = DatePickerDialog(
@@ -162,13 +164,9 @@ class editprofile : AppCompatActivity() {
                 calendar.get(Calendar.DAY_OF_MONTH)
             )
             
-            // Set maximum date to 80 years ago
-            datePickerDialog.datePicker.maxDate = maxDate.timeInMillis
-            
-            // Set minimum date to 18 years ago (optional, you can remove this if you want to allow younger ages)
-            val minDate = Calendar.getInstance()
-            minDate.add(Calendar.YEAR, -18)
-            datePickerDialog.datePicker.minDate = minDate.timeInMillis
+            // Set allowed date range
+            datePickerDialog.datePicker.maxDate = maxDate.timeInMillis // latest allowed DOB
+            datePickerDialog.datePicker.minDate = minDate.timeInMillis // earliest allowed DOB
             
             datePickerDialog.show()
         }
@@ -208,45 +206,24 @@ class editprofile : AppCompatActivity() {
         }
     }
     
-    private fun loadProfileData() {
-        val token = Sessions.getAccessToken(this)
-        if (token == null) {
-            Log.e(TAG, "No access token found")
-            Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show()
-            return
-        }
+    private fun loadProfileData() { /* deprecated in local-only mode */ }
 
-        // Show loading state
-        setLoadingState(true)
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = apiService.getProfile("Bearer $token")
-                val profileResponse = response.execute()
-
-                withContext(Dispatchers.Main) {
-                    if (profileResponse.isSuccessful && profileResponse.body() != null) {
-                        val profile = profileResponse.body()!!
-                        profileExists = true
-                        profileId = 1 // Assuming the API returns profile with ID 1
-                        originalProfileData = profile.data
-                        populateProfileData(profile.data)
-                        Log.d(TAG, "Profile loaded successfully")
-                    } else {
-                        // Profile doesn't exist, load local data as fallback
-                        loadLocalUserData()
-                        Log.d(TAG, "Profile doesn't exist, using local data")
-                    }
-                    setLoadingState(false)
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error loading profile", e)
-                withContext(Dispatchers.Main) {
-                    loadLocalUserData()
-                    setLoadingState(false)
-                    Toast.makeText(this@editprofile, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+    private fun loadLocalProfileData() {
+        try {
+            setLoadingState(true)
+            val local = Sessions.getLocalProfile(this)
+            if (local != null) {
+                originalProfileData = local
+                profileExists = true
+                populateProfileData(local)
+            } else {
+                // Fallback to username/email saved during auth
+                loadLocalUserData()
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading local profile", e)
+        } finally {
+            setLoadingState(false)
         }
     }
 
@@ -290,8 +267,18 @@ class editprofile : AppCompatActivity() {
         
         // Load profile image if available
         if (!profileData?.image.isNullOrEmpty()) {
-            currentProfileImageUrl = profileData?.image
-            loadProfileImage(profileData?.image)
+            // If it's a local file path, load from file; else try as URL
+            val path = profileData?.image
+            currentLocalImagePath = path
+            val file = path?.let { File(it) }
+            if (file != null && file.exists()) {
+                val bitmap = loadBitmapFromFile(file)
+                displayImage(bitmap)
+            } else {
+                loadProfileImage(path)
+            }
+        } else {
+            profileImageView.setImageResource(R.drawable.profile_photo)
         }
     }
 
@@ -342,38 +329,47 @@ class editprofile : AppCompatActivity() {
     }
     
     private fun saveProfile() {
-        if (!validateInputs()) {
-            return
-        }
+        if (!validateInputs()) return
 
-        val token = Sessions.getAccessToken(this)
-        if (token == null) {
-            Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Show loading state
         setLoadingState(true)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val profileData = prepareProfileData()
-                
-                if (profileExists && profileId != null) {
-                    // Update existing profile
-                    updateProfileOnServer(token, profileId!!, profileData)
-                } else {
-                    // Create new profile
-                    createProfileOnServer(token, profileData)
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error saving profile", e)
-                withContext(Dispatchers.Main) {
-                    setLoadingState(false)
-                    Toast.makeText(this@editprofile, "Error saving profile: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
+        // Prepare data
+        val username = fullNameEditText.text.toString().trim()
+        val ageStr = ageEditText.text.toString().trim()
+        val age = ageStr.toIntOrNull()
+        val gender = genderEditText.text.toString().trim()
+        val dobDisplay = dateOfBirthEditText.text.toString().trim()
+        val notes = medicalNotesEditText.text.toString().trim()
+        val imagePath = selectedImageFile?.absolutePath ?: currentLocalImagePath
+
+        // Save locally
+        Sessions.saveLocalProfile(
+            context = this,
+            username = username,
+            age = age,
+            gender = gender,
+            dateOfBirth = dobDisplay,
+            notes = notes,
+            imagePath = imagePath
+        )
+
+        // Update current in-memory model
+        originalProfileData = ProfileData(
+            username = username,
+            age = age,
+            gender = gender,
+            date_of_birth = dobDisplay,
+            notes = notes,
+            image = imagePath
+        )
+        profileExists = true
+        currentLocalImagePath = imagePath
+
+        setLoadingState(false)
+        Toast.makeText(this@editprofile, "Profile saved locally", Toast.LENGTH_SHORT).show()
+
+        // Share updated data
+        shareUpdatedProfileData()
     }
 
     private fun prepareProfileData(): Map<String, String> {
@@ -406,7 +402,7 @@ class editprofile : AppCompatActivity() {
         }
     }
 
-    private suspend fun createProfileOnServer(token: String, profileData: Map<String, String>) {
+    private suspend fun updateProfileOnServer(token: String, profileData: Map<String, String>) {
         val requestBodyMap = profileData.mapValues { (_, value) ->
             value.toRequestBody("text/plain".toMediaTypeOrNull())
         }
@@ -416,7 +412,7 @@ class editprofile : AppCompatActivity() {
             MultipartBody.Part.createFormData("image", file.name, requestFile)
         }
 
-        val call = apiService.createProfile(
+        var call = apiService.updateProfile(
             "Bearer $token",
             requestBodyMap["username"]!!,
             requestBodyMap["age"]!!,
@@ -426,74 +422,19 @@ class editprofile : AppCompatActivity() {
             imagePart
         )
 
-        val response = call.execute()
-        
-        withContext(Dispatchers.Main) {
-            if (response.isSuccessful && response.body() != null) {
-                val profileResponse = response.body()!!
-                profileExists = true
-                profileId = 1 // Assuming the API returns profile with ID 1
-                
-                // Update local storage
-                Sessions.saveUserData(this@editprofile, profileData["username"]!!, Sessions.getUserEmail(this@editprofile) ?: "")
-                
-                // Update current profile data
-                originalProfileData = ProfileData(
-                    username = profileData["username"],
-                    age = profileData["age"]?.toIntOrNull(),
-                    gender = profileData["gender"],
-                    date_of_birth = profileData["date_of_birth"],
-                    notes = profileData["notes"],
-                    image = profileResponse.data?.image
-                )
-                
-                // Update profile image if uploaded
-                if (selectedImageFile != null) {
-                    displayImage(loadBitmapFromFile(selectedImageFile!!))
-                }
-                
-                setLoadingState(false)
-                Toast.makeText(this@editprofile, "Profile created successfully", Toast.LENGTH_SHORT).show()
-                
-                // Share updated data with other activities
-                shareUpdatedProfileData()
-            } else {
-                // Profile already exists, try PATCH
-                if (response.code() == 400 && response.errorBody()?.string()?.contains("Profile already exists") == true) {
-                    Log.d(TAG, "Profile already exists, trying PATCH")
-                    profileExists = true
-                    profileId = 1
-                    updateProfileOnServer(token, 1, profileData)
-                } else {
-                    setLoadingState(false)
-                    Toast.makeText(this@editprofile, "Error creating profile: ${response.message()}", Toast.LENGTH_LONG).show()
-                }
-            }
+        var response = call.execute()
+        if (!response.isSuccessful && response.code() == 404) {
+            call = apiService.updateProfileNoSlash(
+                "Bearer $token",
+                requestBodyMap["username"]!!,
+                requestBodyMap["age"]!!,
+                requestBodyMap["gender"]!!,
+                requestBodyMap["date_of_birth"]!!,
+                requestBodyMap["notes"]!!,
+                imagePart
+            )
+            response = call.execute()
         }
-    }
-
-    private suspend fun updateProfileOnServer(token: String, profileId: Int, profileData: Map<String, String>) {
-        val requestBodyMap = profileData.mapValues { (_, value) ->
-            value.toRequestBody("text/plain".toMediaTypeOrNull())
-        }
-
-        val imagePart = selectedImageFile?.let { file ->
-            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-            MultipartBody.Part.createFormData("image", file.name, requestFile)
-        }
-
-        val call = apiService.updateProfile(
-            "Bearer $token",
-            profileId,
-            requestBodyMap["username"]!!,
-            requestBodyMap["age"]!!,
-            requestBodyMap["gender"]!!,
-            requestBodyMap["date_of_birth"]!!,
-            requestBodyMap["notes"]!!,
-            imagePart
-        )
-
-        val response = call.execute()
         
         withContext(Dispatchers.Main) {
             if (response.isSuccessful && response.body() != null) {
@@ -513,9 +454,7 @@ class editprofile : AppCompatActivity() {
                 )
                 
                 // Update profile image if uploaded
-                if (selectedImageFile != null) {
-                    displayImage(loadBitmapFromFile(selectedImageFile!!))
-                }
+                profileResponse.data?.image?.let { loadProfileImage(it) }
                 
                 setLoadingState(false)
                 Toast.makeText(this@editprofile, "Profile updated successfully", Toast.LENGTH_SHORT).show()
@@ -525,6 +464,74 @@ class editprofile : AppCompatActivity() {
             } else {
                 setLoadingState(false)
                 Toast.makeText(this@editprofile, "Error updating profile: ${response.message()}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private suspend fun createProfileOnServer(token: String, profileData: Map<String, String>) {
+        val requestBodyMap = profileData.mapValues { (_, value) ->
+            value.toRequestBody("text/plain".toMediaTypeOrNull())
+        }
+
+        val imagePart = selectedImageFile?.let { file ->
+            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+            MultipartBody.Part.createFormData("image", file.name, requestFile)
+        }
+
+        var call = apiService.createProfile(
+            "Bearer $token",
+            requestBodyMap["username"]!!,
+            requestBodyMap["age"]!!,
+            requestBodyMap["gender"]!!,
+            requestBodyMap["date_of_birth"]!!,
+            requestBodyMap["notes"]!!,
+            imagePart
+        )
+
+        var response = call.execute()
+        if (!response.isSuccessful && response.code() == 404) {
+            call = apiService.createProfileNoSlash(
+                "Bearer $token",
+                requestBodyMap["username"]!!,
+                requestBodyMap["age"]!!,
+                requestBodyMap["gender"]!!,
+                requestBodyMap["date_of_birth"]!!,
+                requestBodyMap["notes"]!!,
+                imagePart
+            )
+            response = call.execute()
+        }
+
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful && response.body() != null) {
+                val profileResponse = response.body()!!
+
+                // Update flags
+                profileExists = true
+
+                // Update local storage
+                Sessions.saveUserData(this@editprofile, profileData["username"]!!, Sessions.getUserEmail(this@editprofile) ?: "")
+
+                // Update current profile data
+                originalProfileData = ProfileData(
+                    username = profileData["username"],
+                    age = profileData["age"]?.toIntOrNull(),
+                    gender = profileData["gender"],
+                    date_of_birth = profileData["date_of_birth"],
+                    notes = profileData["notes"],
+                    image = profileResponse.data?.image
+                )
+
+                profileResponse.data?.image?.let { loadProfileImage(it) }
+
+                setLoadingState(false)
+                Toast.makeText(this@editprofile, "Profile created successfully", Toast.LENGTH_SHORT).show()
+
+                // Share updated data with other activities
+                shareUpdatedProfileData()
+            } else {
+                setLoadingState(false)
+                Toast.makeText(this@editprofile, "Error creating profile: ${response.message()}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -543,7 +550,11 @@ class editprofile : AppCompatActivity() {
         setResult(RESULT_OK, intent)
         
         // Broadcast to other activities that might be interested
-        sendBroadcast(intent)
+        val broadcast = Intent(ACTION_PROFILE_UPDATED).apply {
+            putExtra(EXTRA_PROFILE_UPDATED, true)
+            putExtra(EXTRA_PROFILE_DATA, originalProfileData)
+        }
+        sendBroadcast(broadcast)
     }
     
     private fun setLoadingState(loading: Boolean) {
@@ -701,6 +712,7 @@ class editprofile : AppCompatActivity() {
             // Display image and store file reference
             displayImage(bitmap)
             selectedImageFile = file
+            currentLocalImagePath = file.absolutePath
             Toast.makeText(this, "Profile photo updated successfully", Toast.LENGTH_SHORT).show()
             
         } catch (e: Exception) {

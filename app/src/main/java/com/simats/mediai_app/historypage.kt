@@ -61,7 +61,7 @@ class historypage : AppCompatActivity() {
     private fun setupRecyclerView() {
         historyAdapter = HistoryAdapter(emptyList()) { historyItem ->
             // Handle item click - could navigate to detail view
-            Toast.makeText(this, "Selected: ${historyItem.mode} - ${historyItem.riskLevel}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Selected", Toast.LENGTH_SHORT).show()
         }
         
         recyclerView.apply {
@@ -103,57 +103,38 @@ class historypage : AppCompatActivity() {
 
         Log.d(TAG, "Loading history data with token: ${token.take(10)}...")
 
-        apiService.getHistory("Bearer $token").enqueue(object : Callback<GetHistoryResponse> {
-            override fun onResponse(call: Call<GetHistoryResponse>, response: Response<GetHistoryResponse>) {
+        // Prefer new V2 endpoint if available
+        apiService.getUserHistory("Bearer $token").enqueue(object : Callback<List<com.simats.mediai_app.responses.HistoryV2Item>> {
+            override fun onResponse(call: Call<List<com.simats.mediai_app.responses.HistoryV2Item>>, response: Response<List<com.simats.mediai_app.responses.HistoryV2Item>>) {
                 swipeRefreshLayout.isRefreshing = false
                 hideLoading()
 
                 Log.d(TAG, "History response code: ${response.code()}")
-                Log.d(TAG, "History response body: ${response.body()}")
-                Log.d(TAG, "History response error body: ${response.errorBody()?.string()}")
+                Log.d(TAG, "History response body items: ${response.body()?.size ?: 0}")
 
                 if (response.isSuccessful && response.body() != null) {
-                    val historyResponse = response.body()!!
-                    Log.d(TAG, "History response success: ${historyResponse.success}")
-                    Log.d(TAG, "History response message: ${historyResponse.message}")
-                    Log.d(TAG, "History data size: ${historyResponse.data?.size ?: 0}")
-                    
-                    if (historyResponse.success) {
-                        val historyList = historyResponse.data ?: emptyList()
-                        if (historyList.isNotEmpty()) {
-                            showHistoryList(historyList)
-                            Log.d(TAG, "Showing ${historyList.size} history items")
-                        } else {
-                            showEmptyState("No history found. Save your first risk assessment to see it here.")
-                            Log.d(TAG, "No history items found")
-                        }
+                    val historyList = response.body()!!
+                    val anyList: List<Any> = historyList
+                    if (anyList.isNotEmpty()) {
+                        // Save to local cache
+                        try {
+                            val gson = com.google.gson.Gson()
+                            val json = gson.toJson(anyList)
+                            Sessions.saveLocalHistoryJson(this@historypage, json)
+                        } catch (_: Exception) {}
+                        showHistoryList(anyList)
                     } else {
-                        val errorMessage = historyResponse.message ?: "Failed to load history"
-                        showEmptyState(errorMessage)
-                        Log.e(TAG, "History API returned error: $errorMessage")
+                        showFromLocalCacheOrEmpty()
                     }
                 } else {
-                    val errorMessage = when (response.code()) {
-                        401 -> "Authentication failed. Please log in again."
-                        403 -> "Access denied. Please check your permissions."
-                        404 -> "History not found."
-                        500 -> "Server error. Please try again later."
-                        else -> "Failed to load history. Please try again. (Code: ${response.code()})"
-                    }
-                    showEmptyState(errorMessage)
-                    Log.e(TAG, "History API failed with code: ${response.code()}")
+                    showFromLocalCacheOrEmpty()
                 }
             }
 
-            override fun onFailure(call: Call<GetHistoryResponse>, t: Throwable) {
+            override fun onFailure(call: Call<List<com.simats.mediai_app.responses.HistoryV2Item>>, t: Throwable) {
                 swipeRefreshLayout.isRefreshing = false
                 hideLoading()
-                val errorMessage = when {
-                    t.message?.contains("timeout", ignoreCase = true) == true -> "Request timeout. Please try again."
-                    t.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your connection."
-                    else -> "Network error. Please check your connection."
-                }
-                showEmptyState(errorMessage)
+                showFromLocalCacheOrEmpty()
                 Log.e(TAG, "History API call failed", t)
             }
         })
@@ -169,7 +150,7 @@ class historypage : AppCompatActivity() {
         loadingLayout.visibility = View.GONE
     }
 
-    private fun showHistoryList(historyList: List<HistoryItem>) {
+    private fun showHistoryList(historyList: List<Any>) {
         recyclerView.visibility = View.VISIBLE
         emptyStateLayout.visibility = View.GONE
         historyAdapter.updateHistoryList(historyList)
@@ -179,5 +160,21 @@ class historypage : AppCompatActivity() {
         recyclerView.visibility = View.GONE
         emptyStateLayout.visibility = View.VISIBLE
         findViewById<TextView>(R.id.emptyStateText)?.text = message
+    }
+
+    private fun showFromLocalCacheOrEmpty() {
+        try {
+            val json = Sessions.getLocalHistoryJson(this)
+            if (!json.isNullOrEmpty()) {
+                val gson = com.google.gson.Gson()
+                val type = com.google.gson.reflect.TypeToken.getParameterized(List::class.java, HistoryItem::class.java).type
+                val list: List<HistoryItem> = gson.fromJson(json, type) ?: emptyList()
+                if (list.isNotEmpty()) {
+                    showHistoryList(list)
+                    return
+                }
+            }
+        } catch (_: Exception) {}
+        showEmptyState("No history found. Save your first risk assessment to see it here.")
     }
 }

@@ -433,6 +433,8 @@ class UploadpageActivity : AppCompatActivity() {
         val token = Sessions.getAccessToken(this)
         if (token == null) {
             Log.w(TAG, "No access token available for saving history")
+            // Still append locally so history shows up
+            appendLocalHistory(response)
             return
         }
 
@@ -444,18 +446,46 @@ class UploadpageActivity : AppCompatActivity() {
         )
 
         apiService.saveHistory("Bearer $token", historyRequest).enqueue(object : Callback<SaveHistoryResponse> {
-            override fun onResponse(call: Call<SaveHistoryResponse>, response: Response<SaveHistoryResponse>) {
-                if (response.isSuccessful) {
+            override fun onResponse(call: Call<SaveHistoryResponse>, resp: Response<SaveHistoryResponse>) {
+                if (resp.isSuccessful) {
                     Log.d(TAG, "History saved successfully")
                 } else {
-                    Log.w(TAG, "Failed to save history: ${response.code()}")
+                    Log.w(TAG, "Failed to save history: ${resp.code()}")
                 }
+                // Append to local cache regardless so UI shows it immediately
+                appendLocalHistory(response)
             }
 
             override fun onFailure(call: Call<SaveHistoryResponse>, t: Throwable) {
                 Log.e(TAG, "Error saving history", t)
+                appendLocalHistory(response)
             }
         })
+    }
+
+    private fun appendLocalHistory(response: ImagePredictionResponse) {
+        try {
+            val gson = com.google.gson.Gson()
+            val type = com.google.gson.reflect.TypeToken.getParameterized(List::class.java, com.simats.mediai_app.responses.HistoryItem::class.java).type
+            val existingJson = Sessions.getLocalHistoryJson(this)
+            val existing: MutableList<com.simats.mediai_app.responses.HistoryItem> = if (!existingJson.isNullOrEmpty()) {
+                gson.fromJson(existingJson, type) ?: mutableListOf()
+            } else mutableListOf()
+            existing.add(
+                com.simats.mediai_app.responses.HistoryItem(
+                    id = response.id,
+                    riskLevel = response.risk_level,
+                    predictionPercentage = response.prediction_percentage.toFloat(),
+                    mode = response.mode,
+                    createdAt = response.created_at,
+                    userId = response.user
+                )
+            )
+            val json = gson.toJson(existing)
+            Sessions.saveLocalHistoryJson(this, json)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to append local history", e)
+        }
     }
 
     private fun handleUploadError(error: Exception) {

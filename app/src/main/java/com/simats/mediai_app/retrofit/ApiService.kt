@@ -26,6 +26,7 @@ import com.simats.mediai_app.responses.ProfileResponse
 import com.simats.mediai_app.responses.SaveHistoryRequest
 import com.simats.mediai_app.responses.SaveHistoryResponse
 import com.simats.mediai_app.responses.GetHistoryResponse
+import com.simats.mediai_app.responses.HistoryV2Item
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
@@ -37,6 +38,13 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Part
 import retrofit2.http.Multipart
+
+// DTO for symptoms history create
+data class SymptomsHistoryRequest(
+    val symptoms: String,
+    val risk_level: String,
+    val prediction_result: String
+)
 
 interface ApiService {
     @POST("api/register/")
@@ -90,7 +98,31 @@ interface ApiService {
 
     // Profile API endpoints
     @Multipart
-    @POST("api/api/profile/")
+    @PATCH("api/data/update/")
+    fun updateProfile(
+        @Header("Authorization") token: String,
+        @Part("username") username: okhttp3.RequestBody,
+        @Part("age") age: okhttp3.RequestBody,
+        @Part("gender") gender: okhttp3.RequestBody,
+        @Part("date_of_birth") dateOfBirth: okhttp3.RequestBody,
+        @Part("notes") notes: okhttp3.RequestBody,
+        @Part image: MultipartBody.Part?
+    ): Call<ProfileResponse>
+
+    @Multipart
+    @PATCH("api/data/update/")
+    fun updateProfileNoSlash(
+        @Header("Authorization") token: String,
+        @Part("username") username: okhttp3.RequestBody,
+        @Part("age") age: okhttp3.RequestBody,
+        @Part("gender") gender: okhttp3.RequestBody,
+        @Part("date_of_birth") dateOfBirth: okhttp3.RequestBody,
+        @Part("notes") notes: okhttp3.RequestBody,
+        @Part image: MultipartBody.Part?
+    ): Call<ProfileResponse>
+
+    @Multipart
+    @POST("api/data/create/")
     fun createProfile(
         @Header("Authorization") token: String,
         @Part("username") username: okhttp3.RequestBody,
@@ -102,10 +134,9 @@ interface ApiService {
     ): Call<ProfileResponse>
 
     @Multipart
-    @PATCH("api/api/profile/{id}/")
-    fun updateProfile(
+    @POST("api/data/create/")
+    fun createProfileNoSlash(
         @Header("Authorization") token: String,
-        @Path("id") profileId: Int,
         @Part("username") username: okhttp3.RequestBody,
         @Part("age") age: okhttp3.RequestBody,
         @Part("gender") gender: okhttp3.RequestBody,
@@ -114,8 +145,11 @@ interface ApiService {
         @Part image: MultipartBody.Part?
     ): Call<ProfileResponse>
 
-    @GET("api/api/profile/")
+    @GET("api/data")
     fun getProfile(@Header("Authorization") token: String): Call<ProfileResponse>
+
+    @GET("api/data")
+    fun getProfileNoSlash(@Header("Authorization") token: String): Call<ProfileResponse>
 
     // History API endpoints
     @POST("api/history/")
@@ -126,4 +160,25 @@ interface ApiService {
 
     @GET("api/history/")
     fun getHistory(@Header("Authorization") token: String): Call<GetHistoryResponse>
+
+    // New V2 endpoints per provided backend (optional):
+    @POST("api/history/")
+    fun postSymptomsHistory(
+        @Header("Authorization") token: String,
+        @Body body: com.simats.mediai_app.retrofit.SymptomsHistoryRequest
+    ): Call<HistoryV2Item>
+
+    @Multipart
+    @POST("api/history/")
+    fun postImageHistory(
+        @Header("Authorization") token: String,
+        @Part image: MultipartBody.Part,
+        @Part("risk_level") riskLevel: okhttp3.RequestBody,
+        @Part("prediction_result") predictionResult: okhttp3.RequestBody
+    ): Call<HistoryV2Item>
+
+    @GET("api/history/")
+    fun getUserHistory(
+        @Header("Authorization") token: String
+    ): Call<List<HistoryV2Item>>
 }

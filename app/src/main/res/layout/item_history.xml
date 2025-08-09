@@ -55,6 +55,42 @@
                 android:textSize="14sp"
                 android:layout_marginTop="2dp"/>
 
+            <!-- Symptoms section (visible if present) -->
+            <TextView
+                android:id="@+id/symptomsLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Symptoms:"
+                android:textStyle="bold"
+                android:textColor="@android:color/black"
+                android:textSize="13sp"
+                android:visibility="gone"
+                android:layout_marginTop="6dp"/>
+            <TextView
+                android:id="@+id/symptomsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/black"
+                android:textSize="13sp"
+                android:visibility="gone"/>
+
+            <!-- Prediction section -->
+            <TextView
+                android:id="@+id/predictionLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Prediction:"
+                android:textStyle="bold"
+                android:textColor="@android:color/black"
+                android:textSize="13sp"
+                android:layout_marginTop="6dp"/>
+            <TextView
+                android:id="@+id/predictionText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/black"
+                android:textSize="13sp"/>
+
         </LinearLayout>
 
         <!-- Risk Level Badge -->
@@ -73,15 +109,7 @@
             android:textSize="12sp"
             android:layout_marginEnd="8dp"/>
 
-        <!-- Percentage -->
-        <TextView
-            android:id="@+id/percentageText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="15%"
-            android:textColor="@android:color/black"
-            android:textStyle="bold"
-            android:textSize="14sp"/>
+        <!-- Percentage removed for V2 list -->
 
     </LinearLayout>
 

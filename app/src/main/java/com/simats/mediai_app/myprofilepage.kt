@@ -27,6 +27,7 @@ import com.simats.mediai_app.responses.ProfileData
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
 
 class myprofilepage : AppCompatActivity() {
     
@@ -85,7 +86,7 @@ class myprofilepage : AppCompatActivity() {
             // Initialize views
             initializeViews()
             
-            // Initialize API service
+            // Initialize API service (not used for local-only display)
             apiService = RetrofitClient.getClient().create(ApiService::class.java)
             
             // Set up click listeners
@@ -100,7 +101,7 @@ class myprofilepage : AppCompatActivity() {
             // Observe ViewModel changes
             observeViewModel()
             
-            // Load profile data
+            // Load local profile data
             loadProfileData()
         } catch (e: Exception) {
             Log.e(TAG, "Error in onCreate", e)
@@ -189,7 +190,7 @@ class myprofilepage : AppCompatActivity() {
     private fun registerProfileUpdateReceiver() {
         try {
             val filter = IntentFilter().apply {
-                addAction(editprofile.EXTRA_PROFILE_UPDATED)
+                addAction(editprofile.ACTION_PROFILE_UPDATED)
             }
             registerReceiver(profileUpdateReceiver, filter)
         } catch (e: Exception) {
@@ -221,43 +222,27 @@ class myprofilepage : AppCompatActivity() {
     
     private fun loadProfileData() {
         try {
-            val token = Sessions.getAccessToken(this)
-            if (token == null) {
-                Log.e(TAG, "No access token found")
-                Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show()
-                return
-            }
-
-            // Show loading state
             setLoadingState(true)
-
-            apiService.getProfile("Bearer $token").enqueue(object : Callback<ProfileResponse> {
-                override fun onResponse(call: Call<ProfileResponse>, response: Response<ProfileResponse>) {
-                    setLoadingState(false)
-                    swipeRefreshLayout.isRefreshing = false
-                    
-                    if (response.isSuccessful && response.body() != null) {
-                        val profileResponse = response.body()!!
-                        updateProfileDisplay(profileResponse.data)
-                        Log.d(TAG, "Profile loaded successfully")
-                    } else {
-                        Log.w(TAG, "Failed to load profile: ${response.code()}")
-                        Toast.makeText(this@myprofilepage, "Failed to load profile", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                override fun onFailure(call: Call<ProfileResponse>, t: Throwable) {
-                    setLoadingState(false)
-                    swipeRefreshLayout.isRefreshing = false
-                    Log.e(TAG, "Error loading profile", t)
-                    Toast.makeText(this@myprofilepage, "Error loading profile: ${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+            val local = Sessions.getLocalProfile(this)
+            if (local != null) {
+                updateProfileDisplay(local)
+            } else {
+                // Fallback to minimal info
+                val fallback = ProfileData(
+                    username = Sessions.getUsername(this),
+                    age = null,
+                    gender = null,
+                    date_of_birth = null,
+                    notes = null,
+                    image = null
+                )
+                updateProfileDisplay(fallback)
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading profile data", e)
+            Log.e(TAG, "Error loading local profile data", e)
+        } finally {
             setLoadingState(false)
             swipeRefreshLayout.isRefreshing = false
-            Toast.makeText(this, "Error loading profile data", Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -294,8 +279,10 @@ class myprofilepage : AppCompatActivity() {
     
     private fun loadProfileImage(imageUrl: String) {
         try {
+            val file = File(imageUrl)
+            val source: Any = if (file.exists()) file else imageUrl
             Glide.with(this)
-                .load(imageUrl)
+                .load(source)
                 .placeholder(R.drawable.profile_photo)
                 .error(R.drawable.profile_photo)
                 .into(profileImageView)

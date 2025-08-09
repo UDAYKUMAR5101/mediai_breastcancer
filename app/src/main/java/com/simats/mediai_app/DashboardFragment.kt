@@ -15,6 +15,14 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import kotlin.random.Random
+import com.simats.mediai_app.retrofit.ApiService
+import com.simats.mediai_app.retrofit.RetrofitClient
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.Calendar
 
 class DashboardFragment : Fragment() {
 
@@ -60,6 +68,10 @@ class DashboardFragment : Fragment() {
         setupClickListeners()
         setupQuotesRotation()
     }
+
+    private lateinit var apiService: ApiService
+    private lateinit var riskLevelValueText: TextView
+    private lateinit var riskLastUpdatedText: TextView
 
     private fun setupClickListeners() {
         // Profile Button - Navigate to Profile Activity
@@ -112,6 +124,9 @@ class DashboardFragment : Fragment() {
         // Initialize quote views
         quoteText = requireView().findViewById(R.id.quoteText)
         quoteAuthor = requireView().findViewById(R.id.quoteAuthor)
+        riskLevelValueText = requireView().findViewById(R.id.riskLevelValueText)
+        riskLastUpdatedText = requireView().findViewById(R.id.riskLastUpdatedText)
+        apiService = RetrofitClient.getClient().create(ApiService::class.java)
         
         // Initialize dots
         dots = arrayOf(
@@ -129,6 +144,74 @@ class DashboardFragment : Fragment() {
         
         // Start auto-rotation
         startQuoteRotation()
+
+        // Load latest risk for dashboard
+        loadLatestRisk()
+    }
+
+    private fun loadLatestRisk() {
+        val token = Sessions.getAccessToken(requireContext()) ?: return
+        apiService.getUserHistory("Bearer $token").enqueue(object : Callback<List<com.simats.mediai_app.responses.HistoryV2Item>> {
+            override fun onResponse(
+                call: Call<List<com.simats.mediai_app.responses.HistoryV2Item>>,
+                response: Response<List<com.simats.mediai_app.responses.HistoryV2Item>>
+            ) {
+                val list = response.body().orEmpty()
+                if (list.isNotEmpty()) {
+                    val latest = list.maxByOrNull { it.created_at } ?: list.first()
+                    updateRiskCard(latest.risk_level, latest.created_at)
+                }
+            }
+
+            override fun onFailure(
+                call: Call<List<com.simats.mediai_app.responses.HistoryV2Item>>,
+                t: Throwable
+            ) { /* ignore */ }
+        })
+    }
+
+    private fun updateRiskCard(riskLevel: String, createdAtIso: String) {
+        riskLevelValueText.text = "• ${riskLevel.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }}"
+        riskLevelValueText.setTextColor(
+            when (riskLevel.lowercase(Locale.getDefault())) {
+                "high" -> resources.getColor(R.color.risk_high, null)
+                "moderate" -> resources.getColor(R.color.risk_moderate, null)
+                else -> resources.getColor(R.color.risk_low, null)
+            }
+        )
+
+        val label = formatLastUpdated(createdAtIso)
+        riskLastUpdatedText.text = "Last updated: $label"
+    }
+
+    private fun formatLastUpdated(createdAtIso: String): String {
+        return try {
+            // Expecting ISO 8601. Try common patterns.
+            val patterns = listOf(
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd"
+            )
+            val parsed = patterns.firstNotNullOfOrNull { p ->
+                try { java.text.SimpleDateFormat(p, Locale.getDefault()).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }.parse(createdAtIso) } catch (_: Exception) { null }
+            } ?: return createdAtIso
+
+            val cal = Calendar.getInstance()
+            val today = Calendar.getInstance().apply { timeInMillis = System.currentTimeMillis() }
+            val thatDay = Calendar.getInstance().apply { time = parsed }
+
+            val sameDay = today.get(Calendar.YEAR) == thatDay.get(Calendar.YEAR) && today.get(Calendar.DAY_OF_YEAR) == thatDay.get(Calendar.DAY_OF_YEAR)
+            if (sameDay) return "Today"
+
+            val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
+            val isYesterday = yesterday.get(Calendar.YEAR) == thatDay.get(Calendar.YEAR) && yesterday.get(Calendar.DAY_OF_YEAR) == thatDay.get(Calendar.DAY_OF_YEAR)
+            if (isYesterday) return "Yesterday"
+
+            SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(parsed)
+        } catch (_: Exception) {
+            createdAtIso
+        }
     }
 
     private fun startQuoteRotation() {
